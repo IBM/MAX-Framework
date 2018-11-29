@@ -7,5 +7,5 @@ setup(name='maxfw',
       author='CODAIT',
       author_email='',
       license='Apache',
-      packages=['maxfw.core'],
+      packages=['maxfw', 'maxfw.core', 'maxfw.model'],
       zip_safe=True)
