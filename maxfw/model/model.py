@@ -3,6 +3,7 @@ from abc import abstractmethod
 class MAXModelWrapper(object):
     @abstractmethod
     def __init__(self, path=None):
+        """Implement code to load model here"""
         pass
 
     @abstractmethod
