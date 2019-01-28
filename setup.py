@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='maxfw',
-      version='1.1',
+      version='1.1.0',
       description='A package to simplify the creation of MAX models',
       url='https://github.com/IBM/MAX-Framework',
       author='CODAIT',
