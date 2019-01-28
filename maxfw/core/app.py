@@ -9,8 +9,8 @@ MAX_API = Namespace('model', description='Model information and inference operat
 
 class MAXApp(object):
 
-    def __init__(self, title=API_TITLE, desc=API_DESC, version=API_VERSION, name=__name__):
-        self.app = Flask(name)
+    def __init__(self, title=API_TITLE, desc=API_DESC, version=API_VERSION):
+        self.app = Flask(title)
 
         # load config
         if os.path.exists("config.py"):
