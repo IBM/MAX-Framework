@@ -20,6 +20,12 @@ class MetadataAPI(MAXAPI):
         """To be implemented"""
         raise NotImplementedError()
 
+class LabelsAPI(MAXAPI):
+
+    def get(self):
+        """To be implemented"""
+        raise NotImplementedError()
+
 class PredictAPI(MAXAPI):
 
     def post(self):
