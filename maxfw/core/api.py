@@ -26,6 +26,8 @@ class PredictAPI(MAXAPI):
         """To be implemented"""
         raise NotImplementedError()
 
+class CustomMAXAPI(MAXAPI):
+    pass
 
 # class FileRequestParser(object):
 #     def __init__(self):

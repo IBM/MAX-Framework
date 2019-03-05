@@ -10,7 +10,7 @@ MAX_API = Namespace('model', description='Model information and inference operat
 class MAXApp(object):
 
     def __init__(self, title=API_TITLE, desc=API_DESC, version=API_VERSION):
-        self.app = Flask(title)
+        self.app = Flask(title, static_url_path='')
 
         # load config
         if os.path.exists("config.py"):
@@ -35,6 +35,11 @@ class MAXApp(object):
 
     def add_api(self, api, route):
         MAX_API.add_resource(api, route)
+
+    def mount_static(self, route):
+        @self.app.route(route)
+        def index():
+            return self.app.send_static_file('index.html')
 
     def run(self, host='0.0.0.0'):
         self.app.run(host)
