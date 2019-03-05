@@ -7,10 +7,11 @@ setup(name='maxfw',
       author='CODAIT',
       author_email='djalova@us.ibm.com, nickp@za.ibm.com, brendan.dwyer@ibm.com',
       license='Apache',
-      packages=['maxfw', 'maxfw.core', 'maxfw.model'],
+      packages=['maxfw', 'maxfw.core', 'maxfw.model', 'maxfw.image_utils'],
       zip_safe=True,
       install_requires=[
         'flask-restplus==0.11.0',
         'flask-cors',
+        'Pillow',
         ],
     )

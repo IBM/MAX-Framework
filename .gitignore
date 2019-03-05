@@ -103,3 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 .vscode/settings.json
+
+# local test files
+test_image_utils/
