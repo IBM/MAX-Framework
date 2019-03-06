@@ -4,25 +4,28 @@ import io
 # other dependencies
 from flask import abort
 from PIL import Image
+import numpy as np
 
 
 class ImagePreprocessor:
     '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
 
-    def __init__(self, keep_alpha_channel, grayscale=False, normalize=False, standardize=False):
+    def __init__(self, remove_alpha_channel=True, grayscale=False, normalize=False, standardize=False):
         '''
-        :param grayscale: Convert the image to grayscale. This reduces the number of channels to one.
+        :param grayscale: Convert an RGB image to grayscale. This reduces the number of channels to one.
         :param normalize: Scale the pixel values to interval [0, 1].
         :param standardize: Scale the pixel values to interval [-1, 1].
-        :param keep_alpha_channel:
+        :param remove_alpha_channel:
         '''
         self.grayscale = grayscale
         self.normalize = normalize
         self.standardize = standardize
+        self.remove_alpha_channel = remove_alpha_channel
         assert self.standardize in [True, False]
         assert self.normalize in [True, False]
+        assert self.remove_alpha_channel in [True, False]
         assert int(normalize) + int(standardize) < 2, "Setting both normalize and stardize to True is not possible."
-        self.keep_alpha_channel = keep_alpha_channel
+        
 
     def preprocess_imagedata(self, image_data):
         '''
@@ -39,10 +42,24 @@ class ImagePreprocessor:
 
         # send the image through the pipeline
         if self.grayscale:
-            pass
+            try:
+                assert im.mode=='RGB'
+                im = im.Convert('L')
+            except:
+                abort(400, "The given image is not in a RGB format to be converted to grayscale")
+        im = np.array(im)
+        
+        if self.normalize:
+            im = im / np.linalg.norm(im)
+        
+        if self.remove_alpha_channel:
+            assert im.shape[-1] == 4
+            im = im[:,:,1:4]
+
 
         # return numpy array
         return im
+
 
 
 class ImagePostprocessor:
