@@ -68,9 +68,12 @@ class ImagePostprocessor:
     def __init__(self, denormalize):
         self.denormalize = denormalize
 
-    def image_to_bytestream(self):
+    def image_to_bytestream(self, image):
         '''
         input: the output image produced by the model
         :return:
         '''
-        return
+        stream = io.BytesIO()
+        image.save(stream)
+        stream = stream.getvalue()
+        return stream
