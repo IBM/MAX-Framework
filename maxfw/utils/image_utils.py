@@ -78,5 +78,4 @@ class ImagePostprocessor:
         '''
         stream = io.BytesIO()
         image.save(stream)
-        stream = stream.getvalue()
-        return stream
+        return stream.seek(0)
