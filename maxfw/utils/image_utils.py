@@ -11,7 +11,7 @@ class ImagePreprocessor:
     '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
 
     def __init__(self, remove_alpha_channel=False, grayscale=False, normalize=False, standardize=False,
-                 rotate_angle=None, resize_shape=None, verbose=False):
+                 rotate_angle=None, resize_shape=None, verbose=False, to_dtype=None):
         '''
         :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of channels to one.
         :param normalize:   Boolean - Scale the pixel values to interval [0, 1].
@@ -19,6 +19,8 @@ class ImagePreprocessor:
         :param remove_alpha_channel: Boolean - Removes the alpha channel and converts image to RGB.
         :param rotate_angle: float - Degrees counterclockwise to rotate.
         :param resize_shape: tuple - The requested size in pixels, as a 2-tuple: (width, height).
+        :param verbose: Boolean -  set verbosity on/off.
+        :param to_dtype: String - convert image to 'full', 'half', 'double', 'int' or 'uint8'.
         '''
         self.grayscale = grayscale
         self.normalize = normalize
@@ -27,6 +29,7 @@ class ImagePreprocessor:
         self.rotate_angle = rotate_angle
         self.resize_shape = resize_shape
         self.verbose = verbose
+        self.to_dtype = to_dtype
 
         # Param sanity check
         assert self.standardize in [True, False]
@@ -77,8 +80,17 @@ class ImagePreprocessor:
         im = np.array(im)
         if self.normalize:
             self._verbose_message(f"Normalizing the image to a [0, 1] scale.")
-            im = im / np.linalg.norm(im)
+            im = im / np.max(im) - np.min(im)
+        
+        if self.standardize:
+            self._verbose_message(f"Standardizing the image to a [-1,1] scale.")
+            mean = np.mean(im)
+            std = np.std(im)
+            im = (im - mean)/std
         # return numpy array
+        if self.to_dtype:
+            dtype_map = {'single':np.float32, 'int':np.int, 'double':np.float64, 'half':np.float16, 'uint8':np.uint8}
+            im = im.astype(dtype_map['to_dtype'])
         return im
 
 
