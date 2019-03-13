@@ -87,7 +87,7 @@ class ImageProcessor(ABC):
                 im = Image.fromarray(im)
             # rotate
             self._verbose_message(f"Rotating the image with an angle of {rotate_angle} degrees counterclockwise.")
-            im = im.rotate(self.rotate_angle)
+            im = im.rotate(rotate_angle)
         return im
 
 
@@ -95,7 +95,9 @@ class ImagePreprocessor(ImageProcessor):
     '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
 
     def __init__(self, keep_alpha_channel=False, grayscale=False, normalize=False, standardize=False,
-                 rotate_angle=None, resize_shape=None, verbose=False, to_dtype=None):
+                 rotate_angle=None, resize_shape=None, verbose=False, to_dtype=None,
+                 error_max_size=(np.Inf, np.Inf),
+                 error_min_size=(0, 0), resize_max_size=(np.Inf, np.Inf), resize_min_size=(0, 0)):
         '''
         :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of dimensions to 2 (H,W) instead of 3 (H,W,C).
         :param normalize:   Boolean - Scale the pixel values to interval [0, 1].
@@ -105,6 +107,10 @@ class ImagePreprocessor(ImageProcessor):
         :param resize_shape: tuple - The requested size in pixels, as a 2-tuple: (width, height).
         :param verbose: Boolean -  set verbosity on/off.
         :param to_dtype: String - convert image to 'full', 'half', 'double', 'int' or 'uint8'.
+        :param: error_max_size: Tuple(int, int) - Throw an error when the image dimensions exceed these dimensions
+        :param: error_min_size: Tuple(int, int) - Throw an error when the image dimensions are lower than these dimensions
+        :param: resize_max_size: Tuple(int, int) - Resize when the image dimensions are higher than these dimensions
+        :param: resize_min_size: Tuple(int, int) - Resize when the image dimensions are lower than these dimensions
         '''
         self.grayscale = grayscale
         self.normalize = normalize
@@ -114,6 +120,10 @@ class ImagePreprocessor(ImageProcessor):
         self.resize_shape = resize_shape
         self.verbose = verbose
         self.to_dtype = to_dtype
+        self.error_max_size = error_max_size
+        self.error_min_size = error_min_size
+        self.resize_max_size = resize_max_size
+        self.resize_min_size = resize_min_size
 
         # Param sanity check
         assert self.standardize in [True, False]
@@ -122,6 +132,16 @@ class ImagePreprocessor(ImageProcessor):
         assert self.verbose in [True, False]
         assert int(normalize) + int(standardize) < 2, "Setting both normalize and stardize to True is not possible."
         assert self.to_dtype in self.dtype_map.keys() or self.to_dtype is None, "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
+        assert type(self.error_max_size) == tuple, "Please supply a tuple (int, int) for error_max_size."
+        assert type(self.error_max_size[1]) == int or self.error_max_size[
+            1] == np.Inf, "Please supply a tuple (int, int) for error_max_size."
+        assert type(self.error_min_size) == tuple and type(
+            self.error_min_size[1]) == int, "Please supply a tuple (int, int) for error_min_size."
+        assert type(self.resize_max_size) == tuple, "Please supply a tuple (int, int) for resize_max_size."
+        assert type(self.resize_max_size[1]) == int or self.resize_max_size[
+            1] == np.Inf, "Please supply a tuple (int, int) for resize_max_size."
+        assert type(self.resize_min_size) == tuple and type(
+            self.resize_min_size[1]) == int, "Please supply a tuple (int, int) for resize_min_size."
 
         # Configure image mode, mapping user params to PIL modes.
         # The image is converted to 'RGB' unless 'grayscale' or 'keep_alpha_channel' is specified.
@@ -151,17 +171,25 @@ class ImagePreprocessor(ImageProcessor):
             abort(400,
                   "The provided input is not a valid image. Make sure that the bytestream of an image is passed as input.")
 
-        if self.error_max_size:
-            raise NotImplementedError
+        # Verify that the input image is between the dimension boundaries, otherwise throw an ERROR.
+        if im.size[0] > self.error_max_size[0] or im.size[1] > self.error_max_size[1]:
+            abort(400,
+                  f"The dimensions of the provided image ({im.size}) are bigger than the maximum allowed dimensions ({self.error_max_size}).")
 
-        if self.error_min_size:
-            raise NotImplementedError
+        if im.size[0] < self.error_min_size[0] or im.size[1] < self.error_min_size[1]:
+            abort(400,
+                  f"The dimensions of the provided image ({im.size}) are smaller than the minimum allowed dimensions ({self.error_min_size}).")
 
-        if self.resize_max_size:
-            raise NotImplementedError
+        # Verify that the input image is between the dimension boundaries, otherwise RESIZE.
+        if im.size[0] > self.resize_max_size[0] or im.size[1] > self.resize_max_size[1]:
+            self._verbose_message(
+                f"Image exceeds maximum allowed dimensions. Resizing the image from {im.size} to {self.resize_max_size}.")
+            im = im.resize(self.resize_max_size)
 
-        if self.resize_min_size:
-            raise NotImplementedError
+        if im.size[0] < self.resize_min_size[0] or im.size[1] < self.resize_min_size[1]:
+            self._verbose_message(
+                f"Image is smaller than the minimum allowed dimensions. Resizing the image from {im.size} to {self.resize_min_size}.")
+            im = im.resize(self.resize_min_size)
 
         # if applicable, rotate the image
         im = self._rotate_or_skip(im, self.rotate_angle)
@@ -195,10 +223,9 @@ class ImagePreprocessor(ImageProcessor):
 class ImagePostprocessor(ImageProcessor):
     '''A Pillow-based image postprocessing tool adapted for MAX APIs.'''
 
-    def __init__(self, denormalize=False, destandardize=False, verbose=False, to_dtype=None, resize_shape=None,
+    def __init__(self, denormalize=False, verbose=False, to_dtype=None, resize_shape=None,
                  rotate_angle=None):
         self.denormalize = denormalize
-        self.destandardize = destandardize
         self.verbose = verbose
         self.to_dtype = to_dtype
         self.resize_shape = resize_shape
@@ -233,10 +260,8 @@ class ImagePostprocessor(ImageProcessor):
         im = np.array(im)
 
         if self.denormalize:
-            raise NotImplementedError
-
-        if self.destandardize:
-            raise NotImplementedError
+            self._verbose_message(f"Denormalizing the image to a [0, 255] scale. NOTE: Results might be spurious.")
+            im = (im + 0) * 255
 
         # write out to png or skip
         self._to_png_or_skip(im, to_png_file)
