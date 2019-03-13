@@ -1,5 +1,6 @@
 # Standard libs
 import io
+import os
 
 # Dependencies
 import pytest
@@ -18,8 +19,20 @@ def test_imagepreprocessor():
     Test the ImagePreprocessor.
     '''
 
-    preprocessor = ImagePreprocessor(grayscale=True, rotate_angle=None, resize_shape=(100, 100), verbose=True)
-    preprocessor.preprocess_imagedata(test_input)
+    # Test reshape
+    preprocessor = ImagePreprocessor(resize_shape=(100, 100), verbose=True)
+    assert preprocessor.preprocess_imagedata(test_input).shape == (100, 100, 3)
+
+    # Test grayscale
+    preprocessor = ImagePreprocessor(resize_shape=(100, 100), grayscale=True, verbose=True)
+    assert preprocessor.preprocess_imagedata(test_input).shape == (100, 100)
+
+    # test file output
+    preprocessor.preprocess_imagedata(test_input, to_png_file='test_output.png')
+    # test if the output image is a valid image
+    Image.open('test_output.png')
+    # remove the test output
+    os.remove('test_output.png')
 
 def test_imagepostprocessor():
     '''
