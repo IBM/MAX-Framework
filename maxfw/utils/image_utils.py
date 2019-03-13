@@ -107,6 +107,10 @@ class ImagePreprocessor(ImageProcessor):
         :param resize_shape: tuple - The requested size in pixels, as a 2-tuple: (width, height).
         :param verbose: Boolean -  set verbosity on/off.
         :param to_dtype: String - convert image to 'full', 'half', 'double', 'int' or 'uint8'.
+        :param: error_max_size: Tuple(int, int) - Throw an error when the image dimensions exceed these dimensions
+        :param: error_min_size: Tuple(int, int) - Throw an error when the image dimensions are lower than these dimensions
+        :param: resize_max_size: Tuple(int, int) - Resize when the image dimensions are higher than these dimensions
+        :param: resize_min_size: Tuple(int, int) - Resize when the image dimensions are lower than these dimensions
         '''
         self.grayscale = grayscale
         self.normalize = normalize
