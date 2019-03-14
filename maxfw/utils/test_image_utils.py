@@ -28,7 +28,7 @@ def test_imagepreprocessor():
     assert preprocessor.preprocess_imagedata(test_input).shape == (100, 100)
 
     # test file output
-    preprocessor.preprocess_imagedata(test_input, to_png_file='test_output.png')
+    preprocessor.preprocess_imagedata(test_input, png_file_path='test_output.png')
     # test if the output image is a valid image
     Image.open('test_output.png')
     # remove the test output
@@ -43,6 +43,6 @@ def test_imagepostprocessor():
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
-    #test_imagepreprocessor()
-    #test_imagepostprocessor()
+    #pytest.main([__file__])
+    test_imagepreprocessor()
+    test_imagepostprocessor()
