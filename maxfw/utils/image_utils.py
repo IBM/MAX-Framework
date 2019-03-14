@@ -29,7 +29,7 @@ class ImageProcessor(ABC):
             self._verbose_message(f"Saving the image to PNG file '{png_file_path}'")
             # Verify the object type
             if type(im) is np.ndarray:
-                Image.fromarray(im).save(png_file_path, 'PNG')
+                Image.fromarray(im.astype(np.uint8)).save(png_file_path, 'PNG')
             elif type(im) is Image.Image:
                 im.save(png_file_path, 'PNG')
             else:
@@ -69,7 +69,7 @@ class ImageProcessor(ABC):
         if type(im) is not np.ndarray:
                 im = np.array(im)
         self._verbose_message(f"Normalizing the image to a [0,1] scale.")
-        im = im / np.max(im) - np.min(im)
+        im = im / (np.max(im) - np.min(im))
         return im
     
     def _standardize(self, im, normalize):

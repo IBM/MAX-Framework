@@ -20,7 +20,7 @@ def test_imagepreprocessor():
     '''
 
     # Test reshape
-    preprocessor = ImagePreprocessor(resize_shape=(100, 100), verbose=True)
+    preprocessor = ImagePreprocessor(rotate_angle=180,resize_shape=(100,100), verbose=True, normalize=False)
     assert preprocessor.preprocess_imagedata(test_input).shape == (100, 100, 3)
 
     # Test grayscale
