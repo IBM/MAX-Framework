@@ -14,6 +14,7 @@ class ImageProcessor(ABC):
     # The supported dtypes as a class variable
     dtype_map = {'single': np.float32, 'int': np.int, 'double': np.float64, 'half': np.float16,
                  'uint8': np.uint8}
+    verbose = True
 
     def _verbose_message(self, message):
         '''
@@ -22,25 +23,65 @@ class ImageProcessor(ABC):
         if self.verbose:
             print(message)
 
-    def _to_png_or_skip(self, im, to_png_file):
+    def _to_png(self, im, png_file_path):
         '''If applicable, save the numpy array to a PNG image.'''
-        if to_png_file is not None:
-            self._verbose_message(f"Saving the image to PNG file '{to_png_file}'")
+        if png_file_path:
+            self._verbose_message(f"Saving the image to PNG file '{png_file_path}'")
             # Verify the object type
             if type(im) is np.ndarray:
-                Image.fromarray(im).save(to_png_file, 'PNG')
+                Image.fromarray(im).save(png_file_path, 'PNG')
             elif type(im) is Image.Image:
-                im.save(to_png_file, 'PNG')
+                im.save(png_file_path, 'PNG')
             else:
                 # Sanity check
                 raise Exception('The image to be saved should be a numpy.ndarray or a Pillow.Image object.')
 
-    def _to_dtype_or_skip(self, im, to_dtype):
+    def _to_dtype(self, im, to_dtype):
         '''If applicable, change the dtype.'''
         if to_dtype:
             im = im.astype(self.dtype_map[to_dtype])
         return im
 
+    def _resize(self, im, resize_shape):
+        '''If applicable, resize the image.'''
+        # skip if resize_shape is None
+        if resize_shape is None:
+            return im
+        # otherwise, resize to the target shape
+        if type(im) is np.ndarray:
+            im = Image.fromarray(im)
+        self._verbose_message(f"Resizing the image from {im.size} to {resize_shape}.")
+        return im.resize(resize_shape)
+
+    def _rotate(self, im, rotate_angle):
+        '''If applicable, rotate the image'''
+        if rotate_angle:
+            # convert np.ndarray to Pillow.Image if required
+            if type(im) is np.ndarray:
+                im = Image.fromarray(im)
+            # rotate
+            self._verbose_message(f"Rotating the image with an angle of {rotate_angle} degrees counterclockwise.")
+            im = im.rotate(rotate_angle)
+        return im
+    
+    def _normalize(self, im, normalize):
+        '''If applicable, normalize the image array'''
+        if type(im) is not np.ndarray:
+                im = np.array(im)
+        self._verbose_message(f"Normalizing the image to a [0,1] scale.")
+        im = im / np.max(im) - np.min(im)
+        return im
+    
+    def _standardize(self, im, normalize):
+        '''If applicable, normalize the image array'''
+        if type(im) is not np.ndarray:
+                im = np.array(im)
+        self._verbose_message(f"Standardizing the image to a [-1,1] scale.")
+        mean = np.mean(im)
+        std = np.std(im)
+        im = (im - mean) / std
+        return im
+    
     def _load_image_from_model_output(self, image_data):
         '''Guess the input type, and convert it to a Pillow.Image object.'''
         # load the image from the variable in the memory
@@ -67,29 +108,6 @@ class ImageProcessor(ABC):
                 except:
                     raise Exception('Please supply a valid input image. Ideally, this is a numpy.ndarray.')
         return im
-
-    def _resize_or_skip(self, im, resize_shape):
-        '''If applicable, resize the image.'''
-        # skip if resize_shape is None
-        if resize_shape is None:
-            return im
-        # otherwise, resize to the target shape
-        if type(im) is np.ndarray:
-            im = Image.fromarray(im)
-        self._verbose_message(f"Resizing the image from {im.size} to {resize_shape}.")
-        return im.resize(resize_shape)
-
-    def _rotate_or_skip(self, im, rotate_angle):
-        '''If applicable, rotate the image'''
-        if rotate_angle:
-            # convert np.ndarray to Pillow.Image if required
-            if type(im) is np.ndarray:
-                im = Image.fromarray(im)
-            # rotate
-            self._verbose_message(f"Rotating the image with an angle of {rotate_angle} degrees counterclockwise.")
-            im = im.rotate(rotate_angle)
-        return im
-
 
 class ImagePreprocessor(ImageProcessor):
     '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
@@ -131,7 +149,7 @@ class ImagePreprocessor(ImageProcessor):
         assert self.keep_alpha_channel in [True, False]
         assert self.verbose in [True, False]
         assert int(normalize) + int(standardize) < 2, "Setting both normalize and stardize to True is not possible."
-        assert self.to_dtype in self.dtype_map.keys() or self.to_dtype is None, "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
+        assert self.to_dtype in self.dtype_map or self.to_dtype is None, "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
         assert type(self.error_max_size) == tuple, "Please supply a tuple (int, int) for error_max_size."
         assert type(self.error_max_size[1]) == int or self.error_max_size[
             1] == np.Inf, "Please supply a tuple (int, int) for error_max_size."
@@ -152,7 +170,7 @@ class ImagePreprocessor(ImageProcessor):
         elif self.keep_alpha_channel:
             self._image_mode = 'RGBA'
 
-    def preprocess_imagedata(self, image_data, to_png_file=None):
+    def preprocess_imagedata(self, image_data, png_file_path=None):
         '''
         Read the image from a bytestream, and apply all necessary transofrmations.
         If the PIL.Image module is unable to process the stream, a Flask error with status code 400 will be raised.
@@ -160,7 +178,7 @@ class ImagePreprocessor(ImageProcessor):
         Input: Image bytes.
         Returns: Numpy array.
         '''
-        assert type(to_png_file) in [type(None), str], "The 'to_file' argument must be set to a valid filepath."
+        assert type(png_file_path) in [type(None), str], "The 'to_file' argument must be set to a valid filepath."
 
         # Load the image into a Pillow.Image object
         try:
@@ -192,28 +210,31 @@ class ImagePreprocessor(ImageProcessor):
             im = im.resize(self.resize_min_size)
 
         # if applicable, rotate the image
-        im = self._rotate_or_skip(im, self.rotate_angle)
+        if self.rotate_angle:
+            im = self._rotate(im, self.rotate_angle)
 
         # if applicable, resize the image
-        im = self._resize_or_skip(im, self.resize_shape)
+        if self.resize_shape:
+            im = self._resize(im, self.resize_shape)
 
         # Convert the Pillow.Image object into a np.ndarray
         im = np.array(im)
+        
+        # normalize
         if self.normalize:
-            self._verbose_message(f"Normalizing the image to a [0, 1] scale.")
-            im = im / np.max(im) - np.min(im)
+            im = self._normalize(im, self.normalize)
 
-        if self.standardize:
-            self._verbose_message(f"Standardizing the image to a [-1,1] scale.")
-            mean = np.mean(im)
-            std = np.std(im)
-            im = (im - mean) / std
+        # standardize
+        if self.standardize: 
+            im = self._standardize(im, self.standardize)
 
         # if applicable, write out to png
-        self._to_png_or_skip(im, to_png_file)
+        if png_file_path:
+            self._to_png(im, png_file_path)
 
         # if applicable, change dtype
-        im = self._to_dtype_or_skip(im, to_dtype=self.to_dtype)
+        if self.to_dtype:
+            im = self._to_dtype(im, to_dtype=self.to_dtype)
 
         # return the image (numpy.ndarray)
         self._verbose_message(f"Returning the image ({type(im)})")
@@ -231,30 +252,31 @@ class ImagePostprocessor(ImageProcessor):
         self.resize_shape = resize_shape
         self.rotate_angle = rotate_angle
 
-    def postprocess_imagedata(self, image_data=None, from_file=None, to_png_file=None):
+    def postprocess_imagedata(self, image_data=None, from_file=None, png_file_path=None):
         '''
         :param image_data: A numpy array, or a Pillow object.
         :param from_file:
-        :param to_png_file:
+        :param png_file_path:
         :return: the image as np.ndarray format
         '''
 
         # Sanity checks
-        assert image_data is None or from_file is None, "Specify either the 'from_file' argument or the 'image_data' argument."
-        assert image_data is not None or from_file is not None, "Specify either the 'from_file' argument or the 'image_data' argument."
+        assert image_data or from_file, "Specify either the 'from_file' argument or the 'image_data' argument."
 
         # Load the image returned by the model as a Pillow.Image
-        if image_data is not None:
+        if image_data:
             im = self._load_image_from_model_output(image_data)
-        elif from_file is not None:
+        elif from_file:
             self._verbose_message(f"Loading image from '{from_file}'")
             im = Image.open(from_file)
 
         # if applicable, rotate the image
-        im = self._rotate_or_skip(im, self.rotate_angle)
+        if self.rotate_angle:
+            im = self._rotate(im, self.rotate_angle)
 
         # if applicable, resize the image
-        im = self._resize_or_skip(im, self.resize_shape)
+        if self.resize_shape:
+            im = self._resize(im, self.resize_shape)
 
         # Convert the Pillow.Image object into a np.ndarray
         im = np.array(im)
@@ -264,10 +286,12 @@ class ImagePostprocessor(ImageProcessor):
             im = (im + 0) * 255
 
         # write out to png or skip
-        self._to_png_or_skip(im, to_png_file)
+        if png_file_path:
+            self._to_png(im, png_file_path)
 
         # change dtype or skip
-        im = self._to_dtype_or_skip(im, to_dtype=self.to_dtype)
+        if self.to_dtype:
+            im = self._to_dtype(im, to_dtype=self.to_dtype)
 
         # return the image (numpy.ndarray)
         self._verbose_message(f"Returning the image ({type(im)})")
