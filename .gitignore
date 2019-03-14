@@ -106,3 +106,5 @@ venv.bak/
 
 # local test files
 test_image_utils/
+
+.idea/
