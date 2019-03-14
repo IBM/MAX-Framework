@@ -172,7 +172,7 @@ class ImagePreprocessor(ImageProcessor):
 
     def preprocess_imagedata(self, image_data, png_file_path=None):
         '''
-        Read the image from a bytestream, and apply all necessary transofrmations.
+        Read the image from a byte stream, and apply all necessary transformations.
         If the PIL.Image module is unable to process the stream, a Flask error with status code 400 will be raised.
 
         Input: Image bytes.
