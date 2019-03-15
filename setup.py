@@ -7,11 +7,13 @@ setup(name='maxfw',
       author='CODAIT',
       author_email='djalova@us.ibm.com, nickp@za.ibm.com, brendan.dwyer@ibm.com',
       license='Apache',
-      packages=['maxfw', 'maxfw.core', 'maxfw.model', 'maxfw.image_utils'],
+      packages=['maxfw', 'maxfw.core', 'maxfw.model', 'maxfw.utils'],
       zip_safe=True,
       install_requires=[
         'flask-restplus==0.11.0',
         'flask-cors',
         'Pillow',
         ],
+        test_suite='nose.collector',
+        tests_require=['nose']
     )

@@ -7,11 +7,11 @@ import pytest
 from PIL import Image
 
 # The module to test
-from image_utils import ImagePreprocessor, ImagePostprocessor
+from maxfw.utils.image_utils import ImagePreprocessor, ImagePostprocessor
 
 # Initialize a test input file
 stream = io.BytesIO()
-Image.open('test_image.jpg').convert('RGBA').save(stream, 'PNG')
+Image.open('maxfw/tests/test_image.jpg').convert('RGBA').save(stream, 'PNG')
 test_input = stream.getvalue()
 
 def test_imagepreprocessor():
@@ -43,6 +43,6 @@ def test_imagepostprocessor():
 
 
 if __name__ == '__main__':
-    #pytest.main([__file__])
+    pytest.main([__file__])
     test_imagepreprocessor()
     test_imagepostprocessor()
