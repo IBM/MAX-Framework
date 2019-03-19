@@ -6,8 +6,9 @@
 * [flask-cors](https://pypi.org/project/Flask-Cors/)
 
 ## Installation
-The package can be installed with pip. However, this is not necessary as the
-Docker images of all MAX models will include `maxfw` as a package.
+
+The package can be installed with pip. However, this is not necessary as each MAX
+model will get the `maxfw` package via the `MAX-Base` image.
 
 If you want to run a MAX model outside of a Docker container then you can install
 it with the following command:
