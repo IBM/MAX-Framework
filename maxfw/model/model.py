@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+
 class MAXModelWrapper(object):
     @abstractmethod
     def __init__(self, path=None):

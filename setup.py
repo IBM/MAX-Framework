@@ -18,4 +18,4 @@ setup(name='maxfw',
         'flask-restplus==0.11.0',
         'flask-cors',
         ],
-    )
+      )
