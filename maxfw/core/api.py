@@ -1,6 +1,5 @@
 from .app import MAX_API
-from flask_restplus import Resource, Model, fields, reqparse
-from werkzeug.datastructures import FileStorage
+from flask_restplus import Resource, fields
 
 METADATA_SCHEMA = MAX_API.model('ModelMetadata', {
         'id': fields.String(required=True, description='Model identifier'),
@@ -11,8 +10,10 @@ METADATA_SCHEMA = MAX_API.model('ModelMetadata', {
         'license': fields.String(required=False, description='Model license')
     })
 
+
 class MAXAPI(Resource):
     pass
+
 
 class MetadataAPI(MAXAPI):
 
@@ -20,11 +21,13 @@ class MetadataAPI(MAXAPI):
         """To be implemented"""
         raise NotImplementedError()
 
+
 class PredictAPI(MAXAPI):
 
     def post(self):
         """To be implemented"""
         raise NotImplementedError()
+
 
 class CustomMAXAPI(MAXAPI):
     pass
