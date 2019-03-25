@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 
 
-class ImageProcessor():
+class ImageProcessor:
     '''Parent / base class for the common functions in the processors.'''
 
     # The supported dtypes as a class variable

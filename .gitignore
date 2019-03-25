@@ -102,9 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-.vscode/settings.json
 
 # local test files
 test_image_utils/
-
 .idea/
+
+# other
+maxfw/.DS_Store
+.vscode/settings.json
