@@ -1,5 +1,4 @@
 # standard lib
-from abc import ABC
 import io
 
 # other dependencies
@@ -8,8 +7,8 @@ from PIL import Image
 import numpy as np
 
 
-class ImageProcessor(ABC):
-    '''Abstract base class for the common functions in the processors.'''
+class ImageProcessor():
+    '''Parent / base class for the common functions in the processors.'''
 
     # The supported dtypes as a class variable
     dtype_map = {'single': np.float32, 'int': np.int, 'double': np.float64, 'half': np.float16,
