@@ -71,12 +71,3 @@ def test_imagepostprocessor():
 
 if __name__ == '__main__':
     pytest.main([__file__])
-    # Preprocessing functions
-    test_imagepreprocessor_read()
-    test_imagepreprocessor_rotate()
-    test_imagepreprocessor_resize()
-    test_imagepreprocessor_grayscale()
-    test_imagepreprocessor_output()
-
-    # Postprocessing
-    test_imagepostprocessor()
