@@ -66,7 +66,7 @@ class ImageProcessor:
     def _normalize(self, im, normalize):
         '''If applicable, normalize the image array'''
         if type(im) is not np.ndarray:
-                im = np.array(im)
+            im = np.array(im)
         self._verbose_message(f"Normalizing the image to a [0,1] scale.")
         im = im / (np.max(im) - np.min(im))
         return im
@@ -74,7 +74,7 @@ class ImageProcessor:
     def _standardize(self, im, normalize):
         '''If applicable, normalize the image array'''
         if type(im) is not np.ndarray:
-                im = np.array(im)
+            im = np.array(im)
         self._verbose_message(f"Standardizing the image to a [-1,1] scale.")
         mean = np.mean(im)
         std = np.std(im)
@@ -108,6 +108,7 @@ class ImageProcessor:
                     raise Exception('Please supply a valid input image. Ideally, this is a numpy.ndarray.')
         return im
 
+
 class ImagePreprocessor(ImageProcessor):
     '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
 
@@ -116,7 +117,8 @@ class ImagePreprocessor(ImageProcessor):
                  error_max_size=(np.Inf, np.Inf),
                  error_min_size=(0, 0), resize_max_size=(np.Inf, np.Inf), resize_min_size=(0, 0)):
         '''
-        :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of dimensions to 2 (H,W) instead of 3 (H,W,C).
+        :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of 
+                            dimensions to 2 (H,W) instead of 3 (H,W,C).
         :param normalize:   Boolean - Scale the pixel values to interval [0, 1].
         :param standardize: Boolean -  Scale the pixel values to interval [-1, 1].
         :param keep_alpha_channel: Boolean - Removes the alpha channel and converts image to RGB.
@@ -148,7 +150,8 @@ class ImagePreprocessor(ImageProcessor):
         assert self.keep_alpha_channel in [True, False]
         assert self.verbose in [True, False]
         assert int(normalize) + int(standardize) < 2, "Setting both normalize and stardize to True is not possible."
-        assert self.to_dtype in self.dtype_map or self.to_dtype is None, "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
+        assert self.to_dtype in self.dtype_map or self.to_dtype is None
+        "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
         assert type(self.error_max_size) == tuple, "Please supply a tuple (int, int) for error_max_size."
         assert type(self.error_max_size[1]) == int or self.error_max_size[
             1] == np.Inf, "Please supply a tuple (int, int) for error_max_size."
@@ -191,11 +194,11 @@ class ImagePreprocessor(ImageProcessor):
         # Verify that the input image is between the dimension boundaries, otherwise throw an ERROR.
         if im.size[0] > self.error_max_size[0] or im.size[1] > self.error_max_size[1]:
             abort(400,
-                  f"The dimensions of the provided image ({im.size}) are bigger than the maximum allowed dimensions ({self.error_max_size}).")
+                  f"The dimensions of the provided image ({im.size}) are bigger than the maximum allowed dimensions.")
 
         if im.size[0] < self.error_min_size[0] or im.size[1] < self.error_min_size[1]:
             abort(400,
-                  f"The dimensions of the provided image ({im.size}) are smaller than the minimum allowed dimensions ({self.error_min_size}).")
+                  f"The dimensions of the provided image ({im.size}) are smaller than the minimum allowed dimensions.")
 
         # Verify that the input image is between the dimension boundaries, otherwise RESIZE.
         if im.size[0] > self.resize_max_size[0] or im.size[1] > self.resize_max_size[1]:
@@ -205,7 +208,7 @@ class ImagePreprocessor(ImageProcessor):
 
         if im.size[0] < self.resize_min_size[0] or im.size[1] < self.resize_min_size[1]:
             self._verbose_message(
-                f"Image is smaller than the minimum allowed dimensions. Resizing the image from {im.size} to {self.resize_min_size}.")
+                f"Image is smaller than the minimum allowed dimensions. Resizing from {im.size} to {self.resize_min_size}.")
             im = im.resize(self.resize_min_size)
 
         # if applicable, rotate the image
