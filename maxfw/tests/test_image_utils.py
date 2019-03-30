@@ -70,10 +70,8 @@ def test_imagepostprocessor():
     '''
     Test the ImagePostProcessor.
     '''
-
-    postprocessor = ImagePostprocessor()
+    ImagePostprocessor()
 
 
 if __name__ == '__main__':
     pytest.main([__file__])
-    
