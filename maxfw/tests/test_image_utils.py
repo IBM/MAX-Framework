@@ -74,4 +74,5 @@ def test_imagepostprocessor():
 
 
 if __name__ == '__main__':
+    # Running Pytest
     pytest.main([__file__])

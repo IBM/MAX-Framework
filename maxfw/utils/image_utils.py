@@ -62,7 +62,7 @@ class ImageProcessor:
             self._verbose_message(f"Rotating the image with an angle of {rotate_angle} degrees counterclockwise.")
             im = im.rotate(rotate_angle)
         return im
-    
+
     def _normalize(self, im, normalize):
         '''If applicable, normalize the image array'''
         if type(im) is not np.ndarray:
@@ -70,7 +70,7 @@ class ImageProcessor:
         self._verbose_message(f"Normalizing the image to a [0,1] scale.")
         im = im / (np.max(im) - np.min(im))
         return im
-    
+
     def _standardize(self, im, normalize):
         '''If applicable, normalize the image array'''
         if type(im) is not np.ndarray:
@@ -80,7 +80,7 @@ class ImageProcessor:
         std = np.std(im)
         im = (im - mean) / std
         return im
-    
+
     def _load_image_from_model_output(self, image_data):
         '''Guess the input type, and convert it to a Pillow.Image object.'''
         # load the image from the variable in the memory
@@ -99,7 +99,7 @@ class ImageProcessor:
             try:
                 im = Image.fromarray(np.array(image_data))
                 self._verbose_message("Loading image")
-            except Exception: 
+            except Exception:
                 # if it's not convertable to a numpy array, it might be bytes
                 try:
                     im = Image.open(io.BytesIO(image_data))
@@ -117,7 +117,7 @@ class ImagePreprocessor(ImageProcessor):
                  error_max_size=(np.Inf, np.Inf),
                  error_min_size=(0, 0), resize_max_size=(np.Inf, np.Inf), resize_min_size=(0, 0)):
         '''
-        :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of 
+        :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of
                             dimensions to 2 (H,W) instead of 3 (H,W,C).
         :param normalize:   Boolean - Scale the pixel values to interval [0, 1].
         :param standardize: Boolean -  Scale the pixel values to interval [-1, 1].
@@ -221,13 +221,13 @@ class ImagePreprocessor(ImageProcessor):
 
         # Convert the Pillow.Image object into a np.ndarray
         im = np.array(im)
-        
+
         # normalize
         if self.normalize:
             im = self._normalize(im, self.normalize)
 
         # standardize
-        if self.standardize: 
+        if self.standardize:
             im = self._standardize(im, self.standardize)
 
         # if applicable, write out to png
