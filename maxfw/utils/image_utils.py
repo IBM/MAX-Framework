@@ -99,12 +99,12 @@ class ImageProcessor:
             try:
                 im = Image.fromarray(np.array(image_data))
                 self._verbose_message("Loading image")
-            except:
+            except Exception: 
                 # if it's not convertable to a numpy array, it might be bytes
                 try:
                     im = Image.open(io.BytesIO(image_data))
                     self._verbose_message("Loading image from bytes")
-                except:
+                except Exception:
                     raise Exception('Please supply a valid input image. Ideally, this is a numpy.ndarray.')
         return im
 
@@ -187,7 +187,7 @@ class ImagePreprocessor(ImageProcessor):
             self._verbose_message(f"Loading image from bytestream.")
             im = Image.open(io.BytesIO(image_data)).convert(self._image_mode)
 
-        except:
+        except Exception:
             abort(400,
                   "The provided input is not a valid image. Make sure that the bytestream of an image is passed as input.")
 
