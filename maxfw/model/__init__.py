@@ -1,1 +1,1 @@
-from .model import MAXModelWrapper
+from .model import MAXModelWrapper  # noqa
