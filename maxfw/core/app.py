@@ -38,5 +38,5 @@ class MAXApp(object):
         def index():
             return self.app.send_static_file('index.html')
 
-    def run(self, host='0.0.0.0'):
-        self.app.run(host)
+    def run(self, host='0.0.0.0', port='5000'):
+        self.app.run(host, port)
