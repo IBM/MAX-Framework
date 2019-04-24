@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/IBM/MAX-Framework.svg?branch=master)](https://travis-ci.com/IBM/MAX-Framework)
+[![Build Status](https://travis-ci.com/IBM/MAX-Framework.svg?branch=master)](https://travis-ci.com/IBM/MAX-Framework) [![PyPy release](https://img.shields.io/pypi/v/maxfw.svg)](https://pypi.org/project/maxfw/) 
 
 # Model Asset Exchange Framework
  Python package that contains common code shared across all MAX models.
