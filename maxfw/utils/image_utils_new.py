@@ -36,10 +36,11 @@ class ImageProcesser(object):
         transforms (list of ``Transform`` objects): list of transforms to compose.
 
     Example:
-        >>> transforms.Compose([
-        >>>     transforms.CenterCrop(10),
-        >>>     transforms.ToTensor(),
+        >>> pipeline = ImageProcessor([
+        >>>     Rotate(150),
+        >>>     Resize([100,100])
         >>> ])
+        >>> pipeline.appy_transforms(img)
     """
 
     def __init__(self, transforms=[ToPILImage()]):
