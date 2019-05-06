@@ -23,7 +23,7 @@ def _is_numpy_image(img):
     return isinstance(img, np.ndarray) and (img.ndim in {2, 3})
 
 
-def to_pil_image(pic, mode=None):
+def to_pil_image(pic, target_mode, mode=None):
     """Convert an ndarray to PIL Image.
 
     Args:
@@ -35,7 +35,8 @@ def to_pil_image(pic, mode=None):
     Returns:
         PIL Image: Image converted to PIL Image.
     """
-    if not(isinstance(pic, np.ndarray) or isinstance(pic, io.BytesIO)):
+    if not isinstance(pic, (bytes, bytearray)) and not(isinstance(pic, np.ndarray)):
+        # if the object is not bytes, and it's not a ndarray
         raise TypeError('pic should be bytes or ndarray. Got {}.'.format(type(pic)))
 
     elif isinstance(pic, np.ndarray):
@@ -46,8 +47,12 @@ def to_pil_image(pic, mode=None):
             # if 2D image, add channel dimension (HWC)
             pic = np.expand_dims(pic, 2)
     
-    elif isinstance(pic, io.BytesIO):
-        pic = np.frombuffer(pic)
+    elif isinstance(pic, (bytes, bytearray)):
+        try:
+            # verify that the object can be loaded into memory
+            pic = np.array(Image.open(io.BytesIO(pic)))
+        except:
+            raise TypeError('The input bytes object is not suitable for the Pillow library. Check the input again.')
 
     npimg = pic
     if not isinstance(npimg, np.ndarray):
@@ -95,14 +100,25 @@ def to_pil_image(pic, mode=None):
     if mode is None:
         raise TypeError('Input type {} is not supported'.format(npimg.dtype))
 
-    return Image.fromarray(npimg, mode=mode)
+    # Verify that the target mode exists
+    assert target_mode in [1, 'L', 'P', 'RGB', 'RGBA', 'CMYK', 'YCbCr', 'LAB', 'HSV', 'I', 'F', 'RGBX', 'RGBBa']
+
+    return Image.fromarray(npimg, mode=mode).convert(target_mode)
 
 
-def normalize(img, mean, std, inplace=False):
+def normalize(img):
     if type(img) is not np.ndarray:
-            img_np = np.array(img)
-    img_np = img_np / (np.max(img_np) - np.min(img_np))
-    return Image.fromarray(img_np)
+        img = np.array(img)
+    img = img / (np.max(img) - np.min(img))
+    return Image.fromarray(img.astype('uint8'))
+
+
+def standardize(img):
+    if type(img) is not np.ndarray:
+        img = np.array(img)
+    mean = np.mean(img)
+    std = np.std(img)
+    return (img - mean) / std
 
 
 def resize(img, size, interpolation=Image.BILINEAR):
@@ -384,6 +400,7 @@ def rotate(img, angle, resample=False, expand=False, center=None):
     .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters
 
     """
+    assert isinstance(angle, (int, float)), "The angle must be either a float or int."
 
     if not _is_pil_image(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
@@ -413,6 +430,11 @@ def to_grayscale(img, num_output_channels=1):
         np_img = np.array(img, dtype=np.uint8)
         np_img = np.dstack([np_img, np_img, np_img])
         img = Image.fromarray(np_img, 'RGB')
+    elif num_output_channels == 4:
+        img = img.convert('L')
+        np_img = np.array(img, dtype=np.uint8)
+        np_img = np.dstack([np_img, np_img, np_img, np_img])
+        img = Image.fromarray(np_img, 'RGBA')
     else:
         raise ValueError('num_output_channels should be either 1 or 3')
 

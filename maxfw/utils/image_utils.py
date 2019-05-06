@@ -75,7 +75,7 @@ class ImageProcessor:
         '''If applicable, normalize the image array'''
         if type(im) is not np.ndarray:
             im = np.array(im)
-        self._verbose_message(f"Standardizing the image to a [-1,1] scale.")
+        self._verbose_message(f"Standardizing the image: mean-centering and scaling the STD.")
         mean = np.mean(im)
         std = np.std(im)
         im = (im - mean) / std

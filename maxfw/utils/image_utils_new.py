@@ -29,7 +29,7 @@ _pil_interpolation_to_str = {
 }
 
 
-class ImageProcesser(object):
+class ImageProcessor(object):
     """Composes several transforms together.
 
     Args:
@@ -43,7 +43,8 @@ class ImageProcesser(object):
         >>> pipeline.appy_transforms(img)
     """
 
-    def __init__(self, transforms=[ToPILImage()]):
+    def __init__(self, transforms=[]):
+        assert isinstance(transforms, Iterable)
         self.transforms = transforms
 
     def apply_transforms(self, img):
@@ -69,8 +70,9 @@ class ToPILImage(object):
 
     .. _PIL.Image mode: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#concept-modes
     """
-    def __init__(self, mode=None):
+    def __init__(self, target_mode, mode=None):
         self.mode = mode
+        self.target_mode = target_mode
 
     def __call__(self, pic):
         """
@@ -81,11 +83,39 @@ class ToPILImage(object):
             PIL Image: Image converted to PIL Image.
 
         """
-        return F.to_pil_image(pic, self.mode)
+        return F.to_pil_image(pic, self.target_mode, self.mode)
 
 
 class Normalize(object):
-    pass
+    """
+    Normalize the image to a range between [0, 1].
+    """
+
+    def __call__(self, img):
+        """
+        Args:
+        img (PIL image or numpy.ndarray): Image to be normalized.
+
+        Returns:
+        numpy.ndarray: Normalized image.
+        """
+        return F.normalize(img)
+
+
+class Standardize(object):
+    """
+    Standardize the image (mean-centering and STD of 1).
+    """
+
+    def __call__(self, img):
+        """
+        Args:
+        img (PIL image or numpy.ndarray): Image to be standardized.
+
+        Returns:
+        numpy.ndarray: Standardized image.
+        """
+        return F.standardize(img)
 
 
 class Resize(object):
@@ -117,6 +147,28 @@ class Resize(object):
         return F.resize(img, self.size, self.interpolation)
 
 
+class Rotate(object):
+    """
+    Rotate the input PIL Image by a given angle (counter clockwise).
+
+    Args:
+        angle (int or float): Counter clockwise angle to rotate the image by.
+    """
+
+    def __init__(self, angle):
+        self.angle = angle
+
+    def __call__(self, img):
+        """
+        Args:
+            img (PIL Image): Image to be rotated.
+
+        Returns:
+            PIL Image: Rotated image.
+        """
+        return F.rotate(img, self.angle)
+
+
 class Grayscale(object):
     """Convert image to grayscale.
 
@@ -131,7 +183,6 @@ class Grayscale(object):
     """
     
     def __init__(self, num_output_channels=1):
-        assert num_output_channels in [1,3]
         self.num_output_channels = num_output_channels
 
     def __call__(self, img):
