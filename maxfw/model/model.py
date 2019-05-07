@@ -1,7 +1,7 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 
-class MAXModelWrapper(object):
+class MAXModelWrapper(ABC):
     @abstractmethod
     def __init__(self, path=None):
         """Implement code to load model here"""
