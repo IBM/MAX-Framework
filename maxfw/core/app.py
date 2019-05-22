@@ -6,6 +6,7 @@ from .default_config import API_TITLE, API_DESC, API_VERSION
 
 MAX_API = Namespace('model', description='Model information and inference operations')
 
+
 class MAXApp(object):
 
     def __init__(self, title=API_TITLE, desc=API_DESC, version=API_VERSION):
@@ -26,7 +27,7 @@ class MAXApp(object):
 
         # enable cors if flag is set
         if os.getenv('CORS_ENABLE') == 'true' and \
-        (os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or self.app.debug != True):
+                (os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or self.app.debug is not True):
             CORS(self.app, origins='*')
             print('NOTE: MAX Model Server is currently allowing cross-origin requests - (CORS ENABLED)')
 
