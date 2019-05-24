@@ -4,7 +4,7 @@ with open('README.md') as f:
     long_description = f.read()
 
 setup(name='maxfw',
-      version='1.1.1',
+      version='1.1.2',
       description='A package to simplify the creation of MAX models',
       long_description=long_description,
       long_description_content_type='text/markdown',
