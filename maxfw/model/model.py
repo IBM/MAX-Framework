@@ -17,7 +17,7 @@ class MAXModelWrapper(ABC):
     @abstractmethod
     def _predict(self, x):
         """Implement core model inference code here"""
-        return x
+        pass
 
     def predict(self, x):
         pre_x = self._pre_process(x)
