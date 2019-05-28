@@ -2,17 +2,14 @@ from abc import ABC, abstractmethod
 
 
 class MAXModelWrapper(ABC):
-    @abstractmethod
     def __init__(self, path=None):
         """Implement code to load model here"""
         pass
 
-    @abstractmethod
     def _pre_process(self, x):
         """Implement code to process raw input into format required for model inference here"""
         return x
 
-    @abstractmethod
     def _post_process(self, x):
         """Implement any code to post-process model inference response here"""
         return x
