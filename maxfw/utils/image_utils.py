@@ -1,311 +1,222 @@
-# standard lib
-import io
-
-# other dependencies
-from flask import abort
+from __future__ import division
+import sys
 from PIL import Image
-import numpy as np
+import collections
+
+from flask import abort
+
+from . import image_functions as F
+
+if sys.version_info < (3, 3):
+    Sequence = collections.Sequence
+    Iterable = collections.Iterable
+else:
+    Sequence = collections.abc.Sequence
+    Iterable = collections.abc.Iterable
 
 
-class ImageProcessor:
-    '''Parent / base class for the common functions in the processors.'''
+def redirect_errors_to_flask(func):
+    """
+    This decorator function will capture all Pythonic errors and return them as flask errors.
 
-    # The supported dtypes as a class variable
-    dtype_map = {'single': np.float32, 'int': np.int, 'double': np.float64, 'half': np.float16,
-                 'uint8': np.uint8}
-    verbose = True
-
-    def _verbose_message(self, message):
-        '''
-        Print message if verbose=True.
-        '''
-        if self.verbose:
-            print(message)
-
-    def _to_png(self, im, png_file_path):
-        '''If applicable, save the numpy array to a PNG image.'''
-        if png_file_path:
-            self._verbose_message(f"Saving the image to PNG file '{png_file_path}'")
-            # Verify the object type
-            if type(im) is np.ndarray:
-                Image.fromarray(im.astype(np.uint8)).save(png_file_path, 'PNG')
-            elif type(im) is Image.Image:
-                im.save(png_file_path, 'PNG')
-            else:
-                # Sanity check
-                raise Exception('The image to be saved should be a numpy.ndarray or a Pillow.Image object.')
-
-    def _to_dtype(self, im, to_dtype):
-        '''If applicable, change the dtype.'''
-        if to_dtype:
-            im = im.astype(self.dtype_map[to_dtype])
-        return im
-
-    def _resize(self, im, resize_shape):
-        '''If applicable, resize the image.'''
-        # skip if resize_shape is None
-        if resize_shape is None:
-            return im
-        # otherwise, resize to the target shape
-        if type(im) is np.ndarray:
-            im = Image.fromarray(im)
-        self._verbose_message(f"Resizing the image from {im.size} to {resize_shape}.")
-        return im.resize(resize_shape)
-
-    def _rotate(self, im, rotate_angle):
-        '''If applicable, rotate the image'''
-        if rotate_angle:
-            # convert np.ndarray to Pillow.Image if required
-            if type(im) is np.ndarray:
-                im = Image.fromarray(im)
-            # rotate
-            self._verbose_message(f"Rotating the image with an angle of {rotate_angle} degrees counterclockwise.")
-            im = im.rotate(rotate_angle)
-        return im
-
-    def _normalize(self, im, normalize):
-        '''If applicable, normalize the image array'''
-        if type(im) is not np.ndarray:
-            im = np.array(im)
-        self._verbose_message(f"Normalizing the image to a [0,1] scale.")
-        im = im / (np.max(im) - np.min(im))
-        return im
-
-    def _standardize(self, im, normalize):
-        '''If applicable, normalize the image array'''
-        if type(im) is not np.ndarray:
-            im = np.array(im)
-        self._verbose_message(f"Standardizing the image: mean-centering and scaling the STD.")
-        mean = np.mean(im)
-        std = np.std(im)
-        im = (im - mean) / std
-        return im
-
-    def _load_image_from_model_output(self, image_data):
-        '''Guess the input type, and convert it to a Pillow.Image object.'''
-        # load the image from the variable in the memory
-        if type(image_data) is np.ndarray:
-            # if the image is a np.ndarray
-            im = Image.fromarray(image_data)
-            self._verbose_message("Loading image from numpy.ndarray format")
-        elif type(image_data) is Image.Image:
-            # if the image is a Pillow image
-            im = image_data
-            self._verbose_message("Loading image from Pillow.Image format")
-        else:
-            # if the image is neither a numpy array or a Pillow image,
-            # we can attempt to convert it to a numpy array or from bytes and load this with Pillow
-            # otherwise, throw an error
-            try:
-                im = Image.fromarray(np.array(image_data))
-                self._verbose_message("Loading image")
-            except Exception:
-                # if it's not convertable to a numpy array, it might be bytes
-                try:
-                    im = Image.open(io.BytesIO(image_data))
-                    self._verbose_message("Loading image from bytes")
-                except Exception:
-                    raise Exception('Please supply a valid input image. Ideally, this is a numpy.ndarray.')
-        return im
-
-
-class ImagePreprocessor(ImageProcessor):
-    '''A Pillow-based image preprocessing tool adapted for MAX APIs.'''
-
-    def __init__(self, keep_alpha_channel=False, grayscale=False, normalize=False, standardize=False,
-                 rotate_angle=None, resize_shape=None, verbose=False, to_dtype=None,
-                 error_max_size=(np.Inf, np.Inf),
-                 error_min_size=(0, 0), resize_max_size=(np.Inf, np.Inf), resize_min_size=(0, 0)):
-        '''
-        :param grayscale:   Boolean - Convert an RGB image to grayscale. This reduces the number of
-                            dimensions to 2 (H,W) instead of 3 (H,W,C).
-        :param normalize:   Boolean - Scale the pixel values to interval [0, 1].
-        :param standardize: Boolean -  Scale the pixel values to interval [-1, 1].
-        :param keep_alpha_channel: Boolean - Removes the alpha channel and converts image to RGB.
-        :param rotate_angle: float - Degrees counterclockwise to rotate.
-        :param resize_shape: tuple - The requested size in pixels, as a 2-tuple: (width, height).
-        :param verbose: Boolean -  set verbosity on/off.
-        :param to_dtype: String - convert image to 'full', 'half', 'double', 'int' or 'uint8'.
-        :param: error_max_size: Tuple(int, int) - Throw an error when the image dimensions exceed these dimensions
-        :param: error_min_size: Tuple(int, int) - Throw an error when the image dimensions are lower than these dimensions
-        :param: resize_max_size: Tuple(int, int) - Resize when the image dimensions are higher than these dimensions
-        :param: resize_min_size: Tuple(int, int) - Resize when the image dimensions are lower than these dimensions
-        '''
-        self.grayscale = grayscale
-        self.normalize = normalize
-        self.standardize = standardize
-        self.keep_alpha_channel = keep_alpha_channel
-        self.rotate_angle = rotate_angle
-        self.resize_shape = resize_shape
-        self.verbose = verbose
-        self.to_dtype = to_dtype
-        self.error_max_size = error_max_size
-        self.error_min_size = error_min_size
-        self.resize_max_size = resize_max_size
-        self.resize_min_size = resize_min_size
-
-        # Param sanity check
-        assert self.standardize in [True, False]
-        assert self.normalize in [True, False]
-        assert self.keep_alpha_channel in [True, False]
-        assert self.verbose in [True, False]
-        assert int(normalize) + int(standardize) < 2, "Setting both normalize and stardize to True is not possible."
-        assert self.to_dtype in self.dtype_map or self.to_dtype is None
-        "The dtype should be either 'full', 'half', 'double', 'int' or 'uint8'."
-        assert type(self.error_max_size) == tuple, "Please supply a tuple (int, int) for error_max_size."
-        assert type(self.error_max_size[1]) == int or self.error_max_size[
-            1] == np.Inf, "Please supply a tuple (int, int) for error_max_size."
-        assert type(self.error_min_size) == tuple and type(
-            self.error_min_size[1]) == int, "Please supply a tuple (int, int) for error_min_size."
-        assert type(self.resize_max_size) == tuple, "Please supply a tuple (int, int) for resize_max_size."
-        assert type(self.resize_max_size[1]) == int or self.resize_max_size[
-            1] == np.Inf, "Please supply a tuple (int, int) for resize_max_size."
-        assert type(self.resize_min_size) == tuple and type(
-            self.resize_min_size[1]) == int, "Please supply a tuple (int, int) for resize_min_size."
-
-        # Configure image mode, mapping user params to PIL modes.
-        # The image is converted to 'RGB' unless 'grayscale' or 'keep_alpha_channel' is specified.
-        self._image_mode = 'RGB'
-        if self.grayscale:
-            # reduces the dimensions to 2 (HW) instead of 3 (HWC)
-            self._image_mode = 'L'
-        elif self.keep_alpha_channel:
-            self._image_mode = 'RGBA'
-
-    def preprocess_imagedata(self, image_data, png_file_path=None):
-        '''
-        Read the image from a byte stream, and apply all necessary transformations.
-        If the PIL.Image module is unable to process the stream, a Flask error with status code 400 will be raised.
-
-        Input: Image bytes.
-        Returns: Numpy array.
-        '''
-        assert type(png_file_path) in [type(None), str], "The 'to_file' argument must be set to a valid filepath."
-
-        # Load the image into a Pillow.Image object
+    If you are looking to disable this functionality, please remove this decorator from the `apply_transforms()` module
+    under the ImageProcessor class.
+    """
+    def inner(*args, **kwargs):
         try:
-            self._verbose_message(f"Loading image from bytestream.")
-            im = Image.open(io.BytesIO(image_data)).convert(self._image_mode)
-
-        except Exception:
-            abort(400,
-                  "The provided input is not a valid image. Make sure that the bytestream of an image is passed as input.")
-
-        # Verify that the input image is between the dimension boundaries, otherwise throw an ERROR.
-        if im.size[0] > self.error_max_size[0] or im.size[1] > self.error_max_size[1]:
-            abort(400,
-                  f"The dimensions of the provided image ({im.size}) are bigger than the maximum allowed dimensions.")
-
-        if im.size[0] < self.error_min_size[0] or im.size[1] < self.error_min_size[1]:
-            abort(400,
-                  f"The dimensions of the provided image ({im.size}) are smaller than the minimum allowed dimensions.")
-
-        # Verify that the input image is between the dimension boundaries, otherwise RESIZE.
-        if im.size[0] > self.resize_max_size[0] or im.size[1] > self.resize_max_size[1]:
-            self._verbose_message(
-                f"Image exceeds maximum allowed dimensions. Resizing the image from {im.size} to {self.resize_max_size}.")
-            im = im.resize(self.resize_max_size)
-
-        if im.size[0] < self.resize_min_size[0] or im.size[1] < self.resize_min_size[1]:
-            self._verbose_message(
-                f"Image is smaller than the minimum allowed dimensions. Resizing from {im.size} to {self.resize_min_size}.")
-            im = im.resize(self.resize_min_size)
-
-        # if applicable, rotate the image
-        if self.rotate_angle:
-            im = self._rotate(im, self.rotate_angle)
-
-        # if applicable, resize the image
-        if self.resize_shape:
-            im = self._resize(im, self.resize_shape)
-
-        # Convert the Pillow.Image object into a np.ndarray
-        im = np.array(im)
-
-        # normalize
-        if self.normalize:
-            im = self._normalize(im, self.normalize)
-
-        # standardize
-        if self.standardize:
-            im = self._standardize(im, self.standardize)
-
-        # if applicable, write out to png
-        if png_file_path:
-            self._to_png(im, png_file_path)
-
-        # if applicable, change dtype
-        if self.to_dtype:
-            im = self._to_dtype(im, to_dtype=self.to_dtype)
-
-        # return the image (numpy.ndarray)
-        self._verbose_message(f"Returning the image ({type(im)})")
-        return im
+            # run the function
+            return func(*args, **kwargs)
+        except ValueError as ve:
+            if 'specific_message' in str(ve):
+                raise NotImplementedError
+            else:
+                raise NotImplementedError
+        except TypeError as te:
+            raise NotImplementedError
+        except Exception as e:
+            # on error, return a 400 using the `abort` module in flask
+            if len(str(e)) > 0:
+                # if there is a specific error message, return it
+                abort(400, str(e))
+            else:
+                # otherwise, return a generic message
+                abort(400, "Something went wrong in the image processing pipeline. Please verify your image.")
+    return inner
 
 
-class ImagePostprocessor(ImageProcessor):
-    '''A Pillow-based image postprocessing tool adapted for MAX APIs.'''
+_pil_interpolation_to_str = {
+    Image.NEAREST: 'PIL.Image.NEAREST',
+    Image.BILINEAR: 'PIL.Image.BILINEAR',
+    Image.BICUBIC: 'PIL.Image.BICUBIC',
+    Image.LANCZOS: 'PIL.Image.LANCZOS',
+    Image.HAMMING: 'PIL.Image.HAMMING',
+    Image.BOX: 'PIL.Image.BOX',
+}
 
-    def __init__(self, denormalize=False, verbose=False, to_dtype=None, resize_shape=None,
-                 rotate_angle=None):
-        self.denormalize = denormalize
-        self.verbose = verbose
-        self.to_dtype = to_dtype
-        self.resize_shape = resize_shape
-        self.rotate_angle = rotate_angle
 
-    def postprocess_imagedata(self, image_data=None, from_file=None, png_file_path=None):
-        '''
-        :param image_data: A numpy array, or a Pillow object.
-        :param from_file:
-        :param png_file_path:
-        :return: the image as np.ndarray format
-        '''
+class ImageProcessor(object):
+    """Composes several transforms together.
 
-        # Sanity checks
-        assert image_data or from_file, "Specify either the 'from_file' argument or the 'image_data' argument."
+    Args:
+        transforms (list of ``Transform`` objects): list of transforms to compose.
 
-        # Load the image returned by the model as a Pillow.Image
-        if image_data:
-            im = self._load_image_from_model_output(image_data)
-        elif from_file:
-            self._verbose_message(f"Loading image from '{from_file}'")
-            im = Image.open(from_file)
+    Example:
+        >>> pipeline = ImageProcessor([
+        >>>     Rotate(150),
+        >>>     Resize([100,100])
+        >>> ])
+        >>> pipeline.apply_transforms(img)
+    """
 
-        # if applicable, rotate the image
-        if self.rotate_angle:
-            im = self._rotate(im, self.rotate_angle)
+    def __init__(self, transforms=[]):
+        assert isinstance(transforms, Iterable)
+        self.transforms = transforms
 
-        # if applicable, resize the image
-        if self.resize_shape:
-            im = self._resize(im, self.resize_shape)
+    @redirect_errors_to_flask
+    def apply_transforms(self, img):
+        for t in self.transforms:
+            img = t(img)
+        return img
 
-        # Convert the Pillow.Image object into a np.ndarray
-        im = np.array(im)
 
-        if self.denormalize:
-            self._verbose_message(f"Denormalizing the image to a [0, 255] scale. NOTE: Results might be spurious.")
-            im = (im + 0) * 255
+class ToPILImage(object):
+    """Convert a byte stream or an ndarray to PIL Image.
 
-        # write out to png or skip
-        if png_file_path:
-            self._to_png(im, png_file_path)
+    Converts a byte stream or a numpy ndarray of shape
+    H x W x C to a PIL Image while preserving the value range.
 
-        # change dtype or skip
-        if self.to_dtype:
-            im = self._to_dtype(im, to_dtype=self.to_dtype)
+    Args:
+        mode (`PIL.Image mode`_): color space and pixel depth of input data (optional).
+            If ``mode`` is ``None`` (default) there are some assumptions made about the input data:
+             - If the input has 4 channels, the ``mode`` is assumed to be ``RGBA``.
+             - If the input has 3 channels, the ``mode`` is assumed to be ``RGB``.
+             - If the input has 2 channels, the ``mode`` is assumed to be ``LA``.
+             - If the input has 1 channel, the ``mode`` is determined by the data type (i.e ``int``, ``float``,
+              ``short``).
 
-        # return the image (numpy.ndarray)
-        self._verbose_message(f"Returning the image ({type(im)})")
-        return im
+    .. _PIL.Image mode: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#concept-modes
+    """
+    def __init__(self, target_mode, mode=None):
+        self.mode = mode
+        self.target_mode = target_mode
 
-    def image_to_bytestream(self, image):
-        '''
-        input: the output image produced by the model
-        :return: a bytestream
-        '''
-        # Return the image as a bytestream
-        stream = io.BytesIO()
-        image.save(stream)
-        self._verbose_message(f"Returning the image ({type(stream)})")
-        return stream.seek(0)
+    def __call__(self, pic):
+        """
+        Args:
+            pic (bytestream or numpy.ndarray): Image to be converted to PIL Image.
+
+        Returns:
+            PIL Image: Image converted to PIL Image.
+
+        """
+        return F.to_pil_image(pic, self.target_mode, self.mode)
+
+
+class Normalize(object):
+    """
+    Normalize the image to a range between [0, 1].
+    """
+
+    def __call__(self, img):
+        """
+        Args:
+        img (PIL image or numpy.ndarray): Image to be normalized.
+
+        Returns:
+        numpy.ndarray: Normalized image.
+        """
+        return F.normalize(img)
+
+
+class Standardize(object):
+    """
+    Standardize the image (mean-centering and STD of 1).
+    """
+
+    def __call__(self, img):
+        """
+        Args:
+        img (PIL image or numpy.ndarray): Image to be standardized.
+
+        Returns:
+        numpy.ndarray: Standardized image.
+        """
+        return F.standardize(img)
+
+
+class Resize(object):
+    """Resize the input PIL Image to the given size.
+
+    Args:
+        size (sequence or int): Desired output size. If size is a sequence like
+            (h, w), output size will be matched to this. If size is an int,
+            smaller edge of the image will be matched to this number.
+            i.e, if height > width, then image will be rescaled to
+            (size * height / width, size)
+        interpolation (int, optional): Desired interpolation. Default is
+            ``PIL.Image.BILINEAR``
+    """
+
+    def __init__(self, size, interpolation=Image.BILINEAR):
+        assert isinstance(size, int) or (isinstance(size, Iterable) and len(size) == 2)
+        self.size = size
+        self.interpolation = interpolation
+
+    def __call__(self, img):
+        """
+        Args:
+            img (PIL Image): Image to be scaled.
+
+        Returns:
+            PIL Image: Rescaled image.
+        """
+        return F.resize(img, self.size, self.interpolation)
+
+
+class Rotate(object):
+    """
+    Rotate the input PIL Image by a given angle (counter clockwise).
+
+    Args:
+        angle (int or float): Counter clockwise angle to rotate the image by.
+    """
+
+    def __init__(self, angle):
+        self.angle = angle
+
+    def __call__(self, img):
+        """
+        Args:
+            img (PIL Image): Image to be rotated.
+
+        Returns:
+            PIL Image: Rotated image.
+        """
+        return F.rotate(img, self.angle)
+
+
+class Grayscale(object):
+    """Convert image to grayscale.
+
+    Args:
+        num_output_channels (int): (1 or 3) number of channels desired for output image
+
+    Returns:
+        PIL Image: Grayscale version of the input.
+        - If num_output_channels == 1 : returned image is single channel
+        - If num_output_channels == 3 : returned image is 3 channel with r == g == b
+
+    """
+    
+    def __init__(self, num_output_channels=1):
+        self.num_output_channels = num_output_channels
+
+    def __call__(self, img):
+        """
+        Args:
+            img (PIL Image): Image to be converted to grayscale.
+
+        Returns:
+            PIL Image: Randomly grayscaled image.
+        """
+        return F.to_grayscale(img, num_output_channels=self.num_output_channels)
