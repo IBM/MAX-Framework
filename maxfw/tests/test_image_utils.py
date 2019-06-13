@@ -160,7 +160,7 @@ def test_flask_error():
         p.apply_transforms(test_input)
 
     # Test for a specific error message
-    with pytest.raises(Exception, match=r"^400 Bad Request: pic should be bytes or ndarray.*"):
+    with pytest.raises(Exception, match=r"pic should be bytes or ndarray.*"):
         transform_sequence = [ToPILImage('RGB')]
         p = ImageProcessor(transform_sequence)
         p.apply_transforms("")
