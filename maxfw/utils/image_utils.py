@@ -32,7 +32,8 @@ def redirect_errors_to_flask(func):
             else:
                 raise NotImplementedError
         except TypeError as te:
-            raise NotImplementedError
+            raise te
+            # TODO
         except Exception as e:
             # on error, return a 400 using the `abort` module in flask
             if len(str(e)) > 0:
@@ -207,7 +208,7 @@ class Grayscale(object):
         - If num_output_channels == 3 : returned image is 3 channel with r == g == b
 
     """
-    
+
     def __init__(self, num_output_channels=1):
         self.num_output_channels = num_output_channels
 

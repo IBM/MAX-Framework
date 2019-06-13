@@ -14,6 +14,7 @@ stream = io.BytesIO()
 Image.open('maxfw/tests/test_image.jpg').convert('RGBA').save(stream, 'PNG')
 test_input = stream.getvalue()
 
+
 def test_imageprocessor_read():
     """Test the Imageprocessor."""
 

@@ -4,10 +4,8 @@ import io
 import numbers
 import collections
 
-from PIL import Image, ImageOps, ImageEnhance, PILLOW_VERSION
+from PIL import Image, ImageEnhance
 import numpy as np
-
-
 
 if sys.version_info < (3, 3):
     Sequence = collections.Sequence
@@ -16,8 +14,10 @@ else:
     Sequence = collections.abc.Sequence
     Iterable = collections.abc.Iterable
 
+
 def _is_pil_image(img):
     return isinstance(img, Image.Image)
+
 
 def _is_numpy_image(img):
     return isinstance(img, np.ndarray) and (img.ndim in {2, 3})
@@ -46,12 +46,12 @@ def to_pil_image(pic, target_mode, mode=None):
         elif pic.ndim == 2:
             # if 2D image, add channel dimension (HWC)
             pic = np.expand_dims(pic, 2)
-    
+
     elif isinstance(pic, (bytes, bytearray)):
         try:
             # verify that the object can be loaded into memory
             pic = np.array(Image.open(io.BytesIO(pic)))
-        except:
+        except Exception:
             raise TypeError('The input bytes object is not suitable for the Pillow library. Check the input again.')
 
     npimg = pic
@@ -157,6 +157,7 @@ def resize(img, size, interpolation=Image.BILINEAR):
     else:
         return img.resize(size[::-1], interpolation)
 
+
 def crop(img, i, j, h, w):
     """Crop the given PIL Image.
 
@@ -220,6 +221,7 @@ def hflip(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
 
     return img.transpose(Image.FLIP_LEFT_RIGHT)
+
 
 def vflip(img):
     """Vertically flip the given PIL Image.
