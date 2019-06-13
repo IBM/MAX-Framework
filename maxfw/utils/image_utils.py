@@ -26,6 +26,13 @@ def redirect_errors_to_flask(func):
         try:
             # run the function
             return func(*args, **kwargs)
+        except ValueError as ve:
+            if 'specific_message' in str(ve):
+                raise NotImplementedError
+            else:
+                raise NotImplementedError
+        except TypeError as te:
+            raise NotImplementedError
         except Exception as e:
             # on error, return a 400 using the `abort` module in flask
             if len(str(e)) > 0:
