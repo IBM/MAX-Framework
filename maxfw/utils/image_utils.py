@@ -73,6 +73,26 @@ class ImageProcessor(object):
         assert isinstance(transforms, Iterable)
         self.transforms = transforms
 
+    def apply_transforms(self, img):
+        for t in self.transforms:
+            img = t(img)
+        return img
+
+
+class MAXImageProcessor(ImageProcessor):
+    """Composes several transforms together.
+
+    Args:
+        transforms (list of ``Transform`` objects): list of transforms to compose.
+
+    Example:
+        >>> pipeline = ImageProcessor([
+        >>>     Rotate(150),
+        >>>     Resize([100,100])
+        >>> ])
+        >>> pipeline.apply_transforms(img)
+    """
+
     @redirect_errors_to_flask
     def apply_transforms(self, img):
         for t in self.transforms:
