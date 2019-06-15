@@ -3,8 +3,6 @@ import sys
 from PIL import Image
 import collections
 
-from flask import abort
-
 from . import image_functions as F
 
 if sys.version_info < (3, 3):
@@ -13,36 +11,6 @@ if sys.version_info < (3, 3):
 else:
     Sequence = collections.abc.Sequence
     Iterable = collections.abc.Iterable
-
-
-def redirect_errors_to_flask(func):
-    """
-    This decorator function will capture all Pythonic errors and return them as flask errors.
-
-    If you are looking to disable this functionality, please remove this decorator from the `apply_transforms()` module
-    under the ImageProcessor class.
-    """
-    def inner(*args, **kwargs):
-        try:
-            # run the function
-            return func(*args, **kwargs)
-        except ValueError as ve:
-            if 'specific_message' in str(ve):
-                raise NotImplementedError
-            else:
-                raise NotImplementedError
-        except TypeError as te:
-            raise te
-            # TODO
-        except Exception as e:
-            # on error, return a 400 using the `abort` module in flask
-            if len(str(e)) > 0:
-                # if there is a specific error message, return it
-                abort(400, str(e))
-            else:
-                # otherwise, return a generic message
-                abort(400, "Something went wrong in the image processing pipeline. Please verify your image.")
-    return inner
 
 
 _pil_interpolation_to_str = {
@@ -73,7 +41,6 @@ class ImageProcessor(object):
         assert isinstance(transforms, Iterable)
         self.transforms = transforms
 
-    @redirect_errors_to_flask
     def apply_transforms(self, img):
         for t in self.transforms:
             img = t(img)
