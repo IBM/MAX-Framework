@@ -8,6 +8,7 @@ from PIL import Image
 
 # The module to test
 from maxfw.utils.image_utils import ImageProcessor, ToPILImage, Resize, Grayscale, Normalize, Standardize, Rotate
+from maxfw.core.utils import MAXImageProcessor
 
 # Initialize a test input file
 stream = io.BytesIO()
@@ -79,7 +80,7 @@ def test_imageprocessor_normalize():
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
 
     # Test normalize
-    transform_sequence = [ToPILImage('RGB'), Normalize(), Normalize()]
+    transform_sequence = [ToPILImage('RGB'), Normalize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
@@ -101,7 +102,7 @@ def test_imageprocessor_standardize():
     assert round(np.std(img_out)) == 1
 
     # Test standardize
-    transform_sequence = [ToPILImage('RGB'), Standardize(), Standardize()]
+    transform_sequence = [ToPILImage('RGB'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert round(np.std(img_out)) == 1
@@ -156,13 +157,13 @@ def test_flask_error():
     # Test for flask exception by using the wrong channel format
     with pytest.raises(Exception, match=r"^400 Bad Request: .*"):
         transform_sequence = [ToPILImage('XXX')]
-        p = ImageProcessor(transform_sequence)
+        p = MAXImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
     # Test for a specific error message
     with pytest.raises(Exception, match=r"pic should be bytes or ndarray.*"):
         transform_sequence = [ToPILImage('RGB')]
-        p = ImageProcessor(transform_sequence)
+        p = MAXImageProcessor(transform_sequence)
         p.apply_transforms("")
 
 
