@@ -106,11 +106,15 @@ def to_pil_image(pic, target_mode, mode=None):
     return Image.fromarray(npimg, mode=mode).convert(target_mode)
 
 
+def pil_to_array(pic):
+    assert _is_pil_image(pic), 'The input image for `PILtoarray` is not a PIL Image object.'
+    return np.array(pic)
+
+
 def normalize(img):
     if type(img) is not np.ndarray:
         img = np.array(img)
-    img = img / (np.max(img) - np.min(img))
-    return Image.fromarray(img.astype('uint8'))
+    return img / (np.max(img) - np.min(img))
 
 
 def standardize(img):

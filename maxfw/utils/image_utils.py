@@ -42,6 +42,12 @@ class ImageProcessor(object):
         self.transforms = transforms
 
     def apply_transforms(self, img):
+        # verify whether the Normalize or Standardize transformations are positioned at the end
+        encoding = [(isinstance(t, Normalize) or isinstance(t, Standardize)) for t in self.transforms]
+        assert sum(encoding[:-1]) == 0, \
+            'A Standardize or Normalize transformation must be positioned at the end of the pipeline.'
+
+        # apply the transformations
         for t in self.transforms:
             img = t(img)
         return img
@@ -78,6 +84,23 @@ class ToPILImage(object):
 
         """
         return F.to_pil_image(pic, self.target_mode, self.mode)
+
+
+class PILtoarray(object):
+    """
+    onvert a PIL Image object to a numpy ndarray.
+    """
+
+    def __call__(self, pic):
+        """
+        Args:
+            pic (PIL Image): Image to be converted to a numpy ndarray.
+
+        Returns:
+            numpy ndarray
+
+        """
+        return F.pil_to_array(pic)
 
 
 class Normalize(object):

@@ -7,7 +7,8 @@ import numpy as np
 from PIL import Image
 
 # The module to test
-from maxfw.utils.image_utils import ImageProcessor, ToPILImage, Resize, Grayscale, Normalize, Standardize, Rotate
+from maxfw.utils.image_utils import ImageProcessor, ToPILImage, Resize, Grayscale, Normalize, Standardize, Rotate, \
+    PILtoarray
 from maxfw.core.utils import MAXImageProcessor
 
 # Initialize a test input file
@@ -91,6 +92,18 @@ def test_imageprocessor_normalize():
     img_out = p.apply_transforms(test_input)
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
 
+    # Test for wrong use
+    with nose.tools.assert_raises(Exception):
+        transform_sequence = [ToPILImage('L'), Normalize(), Resize(size=(200, 200))]
+        p = ImageProcessor(transform_sequence)
+        p.apply_transforms(test_input)
+
+    # Test for wrong use
+    with nose.tools.assert_raises(Exception):
+        transform_sequence = [ToPILImage('RGBA'), Normalize(), Normalize()]
+        p = ImageProcessor(transform_sequence)
+        p.apply_transforms(test_input)
+
 
 def test_imageprocessor_standardize():
     """Test the Imageprocessor's standardize function."""
@@ -104,7 +117,7 @@ def test_imageprocessor_standardize():
     # Test standardize
     transform_sequence = [ToPILImage('RGB'), Standardize()]
     p = ImageProcessor(transform_sequence)
-    img_out = p.apply_transforms(test_input)
+    img_out = np.array(p.apply_transforms(test_input))
     assert round(np.std(img_out)) == 1
 
     # Test standardize
@@ -112,6 +125,18 @@ def test_imageprocessor_standardize():
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert round(np.std(img_out)) == 1
+
+    # Test for wrong use
+    with nose.tools.assert_raises(Exception):
+        transform_sequence = [ToPILImage('L'), Standardize(), Resize(size=(200, 200))]
+        p = ImageProcessor(transform_sequence)
+        p.apply_transforms(test_input)
+
+    # Test for wrong use
+    with nose.tools.assert_raises(Exception):
+        transform_sequence = [ToPILImage('RGBA'), Standardize(), Standardize()]
+        p = ImageProcessor(transform_sequence)
+        p.apply_transforms(test_input)
 
 
 def test_imageprocessor_rotate():
@@ -143,19 +168,29 @@ def test_imageprocessor_combinations():
     transform_sequence = [
         ToPILImage('RGB'),
         Resize((2000, 2000)),
-        Normalize(),
         Rotate(5),
         Grayscale(num_output_channels=4),
         Resize((200, 200)),
+        Normalize()
     ]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (200, 200, 4)
 
+    # Combination 2
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((200, 200)),
+        Normalize()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.array(img_out).shape == (200, 200, 3)
+
 
 def test_flask_error():
     # Test for flask exception by using the wrong channel format
-    with nose.tools.assert_raises_regexp(Exception, r"^400 Bad Request: .*"):
+    with nose.tools.assert_raises_regexp(Exception, r"^400 Bad Request: *"):
         transform_sequence = [ToPILImage('XXX')]
         p = MAXImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
@@ -165,6 +200,12 @@ def test_flask_error():
         transform_sequence = [ToPILImage('RGB')]
         p = MAXImageProcessor(transform_sequence)
         p.apply_transforms("")
+
+    # Test for a flask exception by misusing normalize and standardize functionality
+    with nose.tools.assert_raises_regexp(Exception, r"400 Bad Request: *"):
+        transform_sequence = [ToPILImage('RGB'), Normalize(), Standardize()]
+        p = MAXImageProcessor(transform_sequence)
+        p.apply_transforms(test_input)
 
 
 if __name__ == '__main__':
