@@ -214,6 +214,31 @@ def test_imageprocessor_combinations():
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (200, 200, 3)
 
+    # Combination 3
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((200, 200)),
+        Standardize()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.array(img_out).shape == (200, 200, 3)
+
+    # Combination 5 - including pixel value tests
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((2000, 2000)),
+        Rotate(5),
+        Grayscale(num_output_channels=4),
+        Resize((200, 200)),
+        PILtoarray()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert img_out.shape == (200, 200, 4)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
+
 
 def test_flask_error():
     # Test for flask exception by using the wrong channel format
