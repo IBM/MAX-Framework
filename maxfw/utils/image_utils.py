@@ -13,16 +13,6 @@ else:
     Iterable = collections.abc.Iterable
 
 
-_pil_interpolation_to_str = {
-    Image.NEAREST: 'PIL.Image.NEAREST',
-    Image.BILINEAR: 'PIL.Image.BILINEAR',
-    Image.BICUBIC: 'PIL.Image.BICUBIC',
-    Image.LANCZOS: 'PIL.Image.LANCZOS',
-    Image.HAMMING: 'PIL.Image.HAMMING',
-    Image.BOX: 'PIL.Image.BOX',
-}
-
-
 class ImageProcessor(object):
     """Composes several transforms together.
 
@@ -42,6 +32,16 @@ class ImageProcessor(object):
         self.transforms = transforms
 
     def apply_transforms(self, img):
+        """
+        Sequentially apply the list of transformations to the input image.
+
+        args:
+            img: an image in bytes format, as a Pillow image object, or a numpy ndarray
+
+        output:
+            The transformed image.
+            Depending on the transformation the output is either a Pillow Image object or a numpy ndarray.
+        """
         # verify whether the Normalize or Standardize transformations are positioned at the end
         encoding = [(isinstance(t, Normalize) or isinstance(t, Standardize)) for t in self.transforms]
         assert sum(encoding[:-1]) == 0, \
