@@ -110,15 +110,15 @@ def test_imageprocessor_normalize():
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
 
     # Test for wrong use
+    transform_sequence = [ToPILImage('L'), Normalize(), Resize(size=(200, 200))]
+    p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
-        transform_sequence = [ToPILImage('L'), Normalize(), Resize(size=(200, 200))]
-        p = ImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
     # Test for wrong use
+    transform_sequence = [ToPILImage('RGBA'), Normalize(), Normalize()]
+    p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
-        transform_sequence = [ToPILImage('RGBA'), Normalize(), Normalize()]
-        p = ImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
 
@@ -129,30 +129,30 @@ def test_imageprocessor_standardize():
     transform_sequence = [ToPILImage('RGBA'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert round(np.std(img_out)) == 1
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
 
     # Test standardize
     transform_sequence = [ToPILImage('RGB'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = np.array(p.apply_transforms(test_input))
-    assert round(np.std(img_out)) == 1
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
 
     # Test standardize
     transform_sequence = [ToPILImage('L'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert round(np.std(img_out)) == 1
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
 
     # Test for wrong use
+    transform_sequence = [ToPILImage('L'), Standardize(), Resize(size=(200, 200))]
+    p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
-        transform_sequence = [ToPILImage('L'), Standardize(), Resize(size=(200, 200))]
-        p = ImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
     # Test for wrong use
+    transform_sequence = [ToPILImage('RGBA'), Standardize(), Standardize()]
+    p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
-        transform_sequence = [ToPILImage('RGBA'), Standardize(), Standardize()]
-        p = ImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
 
@@ -238,6 +238,19 @@ def test_imageprocessor_combinations():
     assert img_out.shape == (200, 200, 4)
     assert np.min(img_out) >= 0
     assert np.max(img_out) <= 255
+
+    # Combination 6 - utilize the pipeline multiple times
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((2000, 2000)),
+        Rotate(5),
+        Grayscale(num_output_channels=4),
+        Resize((200, 200)),
+        PILtoarray()
+    ]
+    p = ImageProcessor(transform_sequence)
+    p.apply_transforms(test_input)
+    p.apply_transforms(test_input)
 
 
 def test_flask_error():

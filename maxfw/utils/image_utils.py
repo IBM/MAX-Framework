@@ -17,7 +17,7 @@ class ImageProcessor(object):
     """Composes several transforms together.
 
     Args:
-        transforms (list of ``Transform`` objects): list of transforms to compose.
+        transforms (list of ``Transform`` objects): sequence of transforms to compose.
 
     Example:
         >>> pipeline = ImageProcessor([
@@ -28,7 +28,7 @@ class ImageProcessor(object):
     """
 
     def __init__(self, transforms=[]):
-        assert isinstance(transforms, Iterable)
+        assert isinstance(transforms, Sequence)
         self.transforms = transforms
 
     def apply_transforms(self, img):
@@ -149,7 +149,7 @@ class Resize(object):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        assert isinstance(size, int) or (isinstance(size, Iterable) and len(size) == 2)
+        assert isinstance(size, int) or (isinstance(size, Sequence) and len(size) == 2)
         self.size = size
         self.interpolation = interpolation
 
@@ -190,12 +190,13 @@ class Grayscale(object):
     """Convert image to grayscale.
 
     Args:
-        num_output_channels (int): (1 or 3) number of channels desired for output image
+        num_output_channels (int): (1, 3 or 4) number of channels desired for output image
 
     Returns:
         PIL Image: Grayscale version of the input.
         - If num_output_channels == 1 : returned image is single channel
         - If num_output_channels == 3 : returned image is 3 channel with r == g == b
+        - If num_output_channels == 4 : returned image is 3 channel with r == g == b == a
 
     """
 

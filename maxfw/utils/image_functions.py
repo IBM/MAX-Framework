@@ -423,8 +423,8 @@ def to_grayscale(img, num_output_channels=1):
     Returns:
         PIL Image: Grayscale version of the image.
             if num_output_channels = 1 : returned image is single channel
-
             if num_output_channels = 3 : returned image is 3 channel with r = g = b
+            if num_output_channels = 4 : returned image is 4 channel with r = g = b = a
     """
     if not _is_pil_image(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
@@ -442,6 +442,6 @@ def to_grayscale(img, num_output_channels=1):
         np_img = np.dstack([np_img, np_img, np_img, np_img])
         img = Image.fromarray(np_img, 'RGBA')
     else:
-        raise ValueError('num_output_channels should be either 1 or 3')
+        raise ValueError('num_output_channels should be either 1, 3 or 4')
 
     return img
