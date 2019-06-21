@@ -148,6 +148,16 @@ def test_imageprocessor_rotate():
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (200, 200, 4)
 
+    # Test rotate vs Pillow rotate
+    transform_sequence = [ToPILImage('RGBA'), Resize((200, 200))]
+    p = ImageProcessor(transform_sequence)
+    img_in = p.apply_transforms(test_input)
+
+    transform_sequence = [Rotate(5)]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(img_in)
+    assert img_in.rotate(5) == img_out
+
     # Test rotate (negative int)
     transform_sequence = [ToPILImage('RGBA'), Resize((200, 200)), Rotate(-5)]
     p = ImageProcessor(transform_sequence)
