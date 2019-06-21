@@ -2,12 +2,14 @@
 import io
 
 # Dependencies
-import pytest
+import nose
 import numpy as np
 from PIL import Image
 
 # The module to test
-from maxfw.utils.image_utils import ImageProcessor, ToPILImage, Resize, Grayscale, Normalize, Standardize, Rotate
+from maxfw.utils.image_utils import ImageProcessor, ToPILImage, Resize, Grayscale, Normalize, Standardize, Rotate, \
+    PILtoarray
+from maxfw.core.utils import MAXImageProcessor
 
 # Initialize a test input file
 stream = io.BytesIO()
@@ -29,6 +31,20 @@ def test_imageprocessor_read():
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (678, 1024, 3)
+
+    # Test the values of the image
+    transform_sequence = [ToPILImage('RGBA'), PILtoarray()]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
+
+    # Test the values of the image
+    transform_sequence = [ToPILImage('L'), PILtoarray()]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
 
 
 def test_imageprocessor_resize():
@@ -63,10 +79,13 @@ def test_imageprocessor_grayscale():
     assert np.array(img_out).shape == (200, 200, 3)
 
     # Using 4 output channels
-    transform_sequence = [ToPILImage('RGBA'), Resize(size=(200, 200)), Grayscale(num_output_channels=4)]
+    transform_sequence = [ToPILImage('RGBA'), Resize(size=(200, 200)), Grayscale(num_output_channels=4), PILtoarray()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert np.array(img_out).shape == (200, 200, 4)
+    assert img_out.shape == (200, 200, 4)
+
+    # Test that the values in all 4 output channels are identical
+    assert img_out[..., 0].all() == img_out[..., 1].all() == img_out[..., 2].all() == img_out[..., 3].all()
 
 
 def test_imageprocessor_normalize():
@@ -79,7 +98,7 @@ def test_imageprocessor_normalize():
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
 
     # Test normalize
-    transform_sequence = [ToPILImage('RGB'), Normalize(), Normalize()]
+    transform_sequence = [ToPILImage('RGB'), Normalize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
@@ -90,6 +109,18 @@ def test_imageprocessor_normalize():
     img_out = p.apply_transforms(test_input)
     assert np.max(img_out) <= 1 and np.min(img_out) >= 0
 
+    # Test for wrong use
+    transform_sequence = [ToPILImage('L'), Normalize(), Resize(size=(200, 200))]
+    p = ImageProcessor(transform_sequence)
+    with nose.tools.assert_raises(Exception):
+        p.apply_transforms(test_input)
+
+    # Test for wrong use
+    transform_sequence = [ToPILImage('RGBA'), Normalize(), Normalize()]
+    p = ImageProcessor(transform_sequence)
+    with nose.tools.assert_raises(Exception):
+        p.apply_transforms(test_input)
+
 
 def test_imageprocessor_standardize():
     """Test the Imageprocessor's standardize function."""
@@ -98,19 +129,31 @@ def test_imageprocessor_standardize():
     transform_sequence = [ToPILImage('RGBA'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert round(np.std(img_out)) == 1
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
 
     # Test standardize
-    transform_sequence = [ToPILImage('RGB'), Standardize(), Standardize()]
+    transform_sequence = [ToPILImage('RGB'), Standardize()]
     p = ImageProcessor(transform_sequence)
-    img_out = p.apply_transforms(test_input)
-    assert round(np.std(img_out)) == 1
+    img_out = np.array(p.apply_transforms(test_input))
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
 
     # Test standardize
     transform_sequence = [ToPILImage('L'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert round(np.std(img_out)) == 1
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
+
+    # Test for wrong use
+    transform_sequence = [ToPILImage('L'), Standardize(), Resize(size=(200, 200))]
+    p = ImageProcessor(transform_sequence)
+    with nose.tools.assert_raises(Exception):
+        p.apply_transforms(test_input)
+
+    # Test for wrong use
+    transform_sequence = [ToPILImage('RGBA'), Standardize(), Standardize()]
+    p = ImageProcessor(transform_sequence)
+    with nose.tools.assert_raises(Exception):
+        p.apply_transforms(test_input)
 
 
 def test_imageprocessor_rotate():
@@ -121,6 +164,16 @@ def test_imageprocessor_rotate():
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (200, 200, 4)
+
+    # Test rotate vs Pillow rotate
+    transform_sequence = [ToPILImage('RGBA'), Resize((200, 200))]
+    p = ImageProcessor(transform_sequence)
+    img_in = p.apply_transforms(test_input)
+
+    transform_sequence = [Rotate(5)]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(img_in)
+    assert img_in.rotate(5) == img_out
 
     # Test rotate (negative int)
     transform_sequence = [ToPILImage('RGBA'), Resize((200, 200)), Rotate(-5)]
@@ -142,30 +195,83 @@ def test_imageprocessor_combinations():
     transform_sequence = [
         ToPILImage('RGB'),
         Resize((2000, 2000)),
-        Normalize(),
         Rotate(5),
         Grayscale(num_output_channels=4),
         Resize((200, 200)),
+        Normalize()
     ]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (200, 200, 4)
 
+    # Combination 2
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((200, 200)),
+        Normalize()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.array(img_out).shape == (200, 200, 3)
+
+    # Combination 3
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((200, 200)),
+        Standardize()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.array(img_out).shape == (200, 200, 3)
+
+    # Combination 5 - including pixel value tests
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((2000, 2000)),
+        Rotate(5),
+        Grayscale(num_output_channels=4),
+        Resize((200, 200)),
+        PILtoarray()
+    ]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert img_out.shape == (200, 200, 4)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
+
+    # Combination 6 - utilize the pipeline multiple times
+    transform_sequence = [
+        ToPILImage('RGB'),
+        Resize((2000, 2000)),
+        Rotate(5),
+        Grayscale(num_output_channels=4),
+        Resize((200, 200)),
+        PILtoarray()
+    ]
+    p = ImageProcessor(transform_sequence)
+    p.apply_transforms(test_input)
+    p.apply_transforms(test_input)
+
 
 def test_flask_error():
     # Test for flask exception by using the wrong channel format
-    with pytest.raises(Exception, match=r"^400 Bad Request: .*"):
-        transform_sequence = [ToPILImage('XXX')]
-        p = ImageProcessor(transform_sequence)
+    transform_sequence = [ToPILImage('XXX')]
+    p = MAXImageProcessor(transform_sequence)
+    with nose.tools.assert_raises_regexp(Exception, r"^400 Bad Request: *"):
         p.apply_transforms(test_input)
 
     # Test for a specific error message
-    with pytest.raises(Exception, match=r"pic should be bytes or ndarray.*"):
-        transform_sequence = [ToPILImage('RGB')]
-        p = ImageProcessor(transform_sequence)
+    transform_sequence = [ToPILImage('RGB')]
+    p = MAXImageProcessor(transform_sequence)
+    with nose.tools.assert_raises_regexp(Exception, r"pic should be bytes or ndarray.*"):
         p.apply_transforms("")
+
+    # Test for a flask exception by misusing normalize and standardize functionality
+    transform_sequence = [ToPILImage('RGB'), Normalize(), Standardize()]
+    p = MAXImageProcessor(transform_sequence)
+    with nose.tools.assert_raises_regexp(Exception, r"400 Bad Request: *"):
+        p.apply_transforms(test_input)
 
 
 if __name__ == '__main__':
-    # Running Pytest
-    pytest.main([__file__])
+    nose.main()

@@ -1,5 +1,5 @@
 from flask import abort
-from utils.image_utils import ImageProcessor
+from maxfw.utils.image_utils import ImageProcessor
 
 
 def redirect_errors_to_flask(func):
@@ -47,9 +47,9 @@ class MAXImageProcessor(ImageProcessor):
         >>> ])
         >>> pipeline.apply_transforms(img)
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @redirect_errors_to_flask
     def apply_transforms(self, img):
-        for t in self.transforms:
-            img = t(img)
-        return img
+        return super().apply_transforms(img)

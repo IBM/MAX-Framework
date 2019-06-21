@@ -13,21 +13,11 @@ else:
     Iterable = collections.abc.Iterable
 
 
-_pil_interpolation_to_str = {
-    Image.NEAREST: 'PIL.Image.NEAREST',
-    Image.BILINEAR: 'PIL.Image.BILINEAR',
-    Image.BICUBIC: 'PIL.Image.BICUBIC',
-    Image.LANCZOS: 'PIL.Image.LANCZOS',
-    Image.HAMMING: 'PIL.Image.HAMMING',
-    Image.BOX: 'PIL.Image.BOX',
-}
-
-
 class ImageProcessor(object):
     """Composes several transforms together.
 
     Args:
-        transforms (list of ``Transform`` objects): list of transforms to compose.
+        transforms (list of ``Transform`` objects): sequence of transforms to compose.
 
     Example:
         >>> pipeline = ImageProcessor([
@@ -38,10 +28,26 @@ class ImageProcessor(object):
     """
 
     def __init__(self, transforms=[]):
-        assert isinstance(transforms, Iterable)
+        assert isinstance(transforms, Sequence)
         self.transforms = transforms
 
     def apply_transforms(self, img):
+        """
+        Sequentially apply the list of transformations to the input image.
+
+        args:
+            img: an image in bytes format, as a Pillow image object, or a numpy ndarray
+
+        output:
+            The transformed image.
+            Depending on the transformation the output is either a Pillow Image object or a numpy ndarray.
+        """
+        # verify whether the Normalize or Standardize transformations are positioned at the end
+        encoding = [(isinstance(t, Normalize) or isinstance(t, Standardize)) for t in self.transforms]
+        assert sum(encoding[:-1]) == 0, \
+            'A Standardize or Normalize transformation must be positioned at the end of the pipeline.'
+
+        # apply the transformations
         for t in self.transforms:
             img = t(img)
         return img
@@ -78,6 +84,23 @@ class ToPILImage(object):
 
         """
         return F.to_pil_image(pic, self.target_mode, self.mode)
+
+
+class PILtoarray(object):
+    """
+    onvert a PIL Image object to a numpy ndarray.
+    """
+
+    def __call__(self, pic):
+        """
+        Args:
+            pic (PIL Image): Image to be converted to a numpy ndarray.
+
+        Returns:
+            numpy ndarray
+
+        """
+        return F.pil_to_array(pic)
 
 
 class Normalize(object):
@@ -126,7 +149,7 @@ class Resize(object):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        assert isinstance(size, int) or (isinstance(size, Iterable) and len(size) == 2)
+        assert isinstance(size, int) or (isinstance(size, Sequence) and len(size) == 2)
         self.size = size
         self.interpolation = interpolation
 
@@ -167,12 +190,13 @@ class Grayscale(object):
     """Convert image to grayscale.
 
     Args:
-        num_output_channels (int): (1 or 3) number of channels desired for output image
+        num_output_channels (int): (1, 3 or 4) number of channels desired for output image
 
     Returns:
         PIL Image: Grayscale version of the input.
         - If num_output_channels == 1 : returned image is single channel
         - If num_output_channels == 3 : returned image is 3 channel with r == g == b
+        - If num_output_channels == 4 : returned image is 3 channel with r == g == b == a
 
     """
 
