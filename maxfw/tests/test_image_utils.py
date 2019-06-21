@@ -2,7 +2,7 @@
 import io
 
 # Dependencies
-import pytest
+import nose
 import numpy as np
 from PIL import Image
 
@@ -155,18 +155,17 @@ def test_imageprocessor_combinations():
 
 def test_flask_error():
     # Test for flask exception by using the wrong channel format
-    with pytest.raises(Exception, match=r"^400 Bad Request: .*"):
+    with nose.tools.assert_raises_regexp(Exception, r"^400 Bad Request: .*"):
         transform_sequence = [ToPILImage('XXX')]
         p = MAXImageProcessor(transform_sequence)
         p.apply_transforms(test_input)
 
     # Test for a specific error message
-    with pytest.raises(Exception, match=r"pic should be bytes or ndarray.*"):
+    with nose.tools.assert_raises_regexp(Exception, r"pic should be bytes or ndarray.*"):
         transform_sequence = [ToPILImage('RGB')]
         p = MAXImageProcessor(transform_sequence)
         p.apply_transforms("")
 
 
 if __name__ == '__main__':
-    # Running Pytest
-    pytest.main([__file__])
+    nose.main()
