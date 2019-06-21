@@ -32,6 +32,20 @@ def test_imageprocessor_read():
     img_out = p.apply_transforms(test_input)
     assert np.array(img_out).shape == (678, 1024, 3)
 
+    # Test the values of the image
+    transform_sequence = [ToPILImage('RGBA'), PILtoarray()]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
+
+    # Test the values of the image
+    transform_sequence = [ToPILImage('L'), PILtoarray()]
+    p = ImageProcessor(transform_sequence)
+    img_out = p.apply_transforms(test_input)
+    assert np.min(img_out) >= 0
+    assert np.max(img_out) <= 255
+
 
 def test_imageprocessor_resize():
     """Test the Imageprocessor's resize function."""
@@ -65,10 +79,13 @@ def test_imageprocessor_grayscale():
     assert np.array(img_out).shape == (200, 200, 3)
 
     # Using 4 output channels
-    transform_sequence = [ToPILImage('RGBA'), Resize(size=(200, 200)), Grayscale(num_output_channels=4)]
+    transform_sequence = [ToPILImage('RGBA'), Resize(size=(200, 200)), Grayscale(num_output_channels=4), PILtoarray()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    assert np.array(img_out).shape == (200, 200, 4)
+    assert img_out.shape == (200, 200, 4)
+
+    # Test that the values in all 4 output channels are identical
+    assert img_out[..., 0].all() == img_out[..., 1].all() == img_out[..., 2].all() == img_out[..., 3].all()
 
 
 def test_imageprocessor_normalize():
