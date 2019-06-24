@@ -117,12 +117,89 @@ def normalize(img):
     return img / (np.max(img) - np.min(img))
 
 
-def standardize(img):
+def standardize(img, mean=None, std=None):
+    # ensure we are working with a numpy ndarray
     if type(img) is not np.ndarray:
         img = np.array(img)
-    mean = np.mean(img)
-    std = np.std(img)
-    return (img - mean) / std
+    img = img.astype(np.float64)
+
+    # check whether the image has channels
+    if img.ndim == 3:
+        # (this image has channels)
+        # calculate the number of channels
+        channels = img.shape[-1]
+
+        if mean is None:
+            # calculate channel-wise mean
+            mean = np.mean(img, axis=(0, 1), keepdims=True)
+        elif isinstance(mean, (int, float)):
+            # convert the number to an array
+            mean = np.array([mean] * channels).reshape((1, 1, channels))
+        elif isinstance(mean, Sequence):
+            # convert a sequence to the right dimensions
+            assert np.sum([not isinstance(x, (int, float)) for x in mean]) == 0, \
+                'The sequence `mean` can only contain numbers.'
+            assert len(mean) == channels, \
+                'The size of the `mean` array must correspond to the number of channels in the image.'
+            mean = np.array(mean).reshape((1, 1, channels))
+        else:
+            # if the mean is not a number or a sequence
+            raise ValueError('The value for `mean` should either be a number or an n-dimensional vector of numbers '
+                             'with n equal to the number of image channels.')
+
+        if std is None:
+            # calculate channel-wise std
+            std = np.std(img, axis=(0, 1)).reshape((channels,))
+        elif isinstance(std, (int, float)):
+            # convert the number to an array
+            std = np.array([std] * channels).reshape((channels,))
+        elif isinstance(std, Sequence):
+            # convert a sequence to the right dimensions
+            assert np.sum([not isinstance(x, (int, float)) for x in std]) == 0, \
+                'The sequence `std` can only contain numbers.'
+            assert len(std) == channels, \
+                'The size of the `std` array must correspond to the number of channels in the image.'
+            std = np.array(std).reshape((channels,))
+        else:
+            # if the std is not a number or a sequence
+            raise ValueError('The value for `std` should either be a number or an n-dimensional vector '
+                             'of numbers with n equal to the number of image channels.')
+
+        # return the standardized array
+        # a. mean center
+        img_mean_centered = (img - mean).astype(np.float64)
+
+        # b. channel-wise division by std
+        for c in range(channels):
+            if std[c] != 0:
+                img_mean_centered[..., c] = img_mean_centered[..., c] / std[c]
+
+        return img_mean_centered
+
+    else:
+        # (this image has no channels)
+        if mean is None:
+            mean = np.mean(img)
+        elif isinstance(mean, Sequence):
+            assert len(mean) == 1
+            mean = mean[0]
+        elif not isinstance(mean, (int, float)):
+            raise ValueError('The value for `mean` should be a number or `None` '
+                             'when working with single-channel images.')
+
+        if std is None:
+            std = np.std(img)
+        elif isinstance(std, Sequence):
+            assert len(std) == 1
+            std = std[0]
+        elif not isinstance(std, (int, float)):
+            raise ValueError('The value for `std` should be a number or `None` '
+                             'when working with single-channel images.')
+
+        if std != 0:
+            return (img-mean)/std
+        else:
+            return img-mean
 
 
 def resize(img, size, interpolation=Image.BILINEAR):

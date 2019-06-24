@@ -122,7 +122,18 @@ class Normalize(object):
 class Standardize(object):
     """
     Standardize the image (mean-centering and STD of 1).
+
+    Args:
+        mean (optional): a single number or an n-dimensional sequence with n equal to the number of image channels
+        std (optional): a single number or an n-dimensional sequence with n equal to the number of image channels
+    Returns:
+        numpy.ndarray: standardized image
+
+    If `mean` or `std` are not provided, the channel-wise values will be calculated for the input image.
     """
+    def __init__(self, mean=None, std=None):
+        self.mean = mean
+        self.std = std
 
     def __call__(self, img):
         """
@@ -132,7 +143,7 @@ class Standardize(object):
         Returns:
         numpy.ndarray: Standardized image.
         """
-        return F.standardize(img)
+        return F.standardize(img, self.mean, self.std)
 
 
 class Resize(object):

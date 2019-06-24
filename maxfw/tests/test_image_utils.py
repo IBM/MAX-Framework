@@ -125,31 +125,154 @@ def test_imageprocessor_normalize():
 def test_imageprocessor_standardize():
     """Test the Imageprocessor's standardize function."""
 
-    # Test standardize
+    # Test standardize (RGBA)
     transform_sequence = [ToPILImage('RGBA'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
-    nose.tools.assert_almost_equal(np.std(img_out), 1)
+    nose.tools.assert_almost_equal(np.std(img_out[..., :3]), 1)
+    nose.tools.assert_equal(np.std(img_out[..., 3]), 0)
 
-    # Test standardize
+    # generate an image array
+    pil_img = ImageProcessor([ToPILImage('RGBA'), PILtoarray()]).apply_transforms(test_input)
+
+    # Test standardize (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=np.mean(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=np.mean(pil_img), std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=127, std=5)]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=[127, 127], std=5)]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(std=['5', 'sdf', '5', '5'])]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*can only contain numbers.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=['5', 'sdf', '5', '5'])]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*can only contain numbers.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean='5')]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*can only contain numbers.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGBA)
+    transform_sequence = [ToPILImage('RGBA'), Standardize(std=[5, 5, 5])]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB)
     transform_sequence = [ToPILImage('RGB'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = np.array(p.apply_transforms(test_input))
     nose.tools.assert_almost_equal(np.std(img_out), 1)
 
-    # Test standardize
+    # Test standardize (RGB) - check whether the mean centering works
+    transform_sequence = [ToPILImage('RGB'), Standardize(std=0)]
+    p = ImageProcessor(transform_sequence)
+    img_out = np.array(p.apply_transforms(test_input))
+    nose.tools.assert_almost_equal(np.mean(img_out), 0)
+
+    # Test standardize (RGB) - check whether the std division works
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=0)]
+    p = ImageProcessor(transform_sequence)
+    img_out = np.array(p.apply_transforms(test_input))
+    nose.tools.assert_almost_equal(np.std(img_out[..., 0]), 1)
+    nose.tools.assert_almost_equal(np.std(img_out[..., 1]), 1)
+    nose.tools.assert_almost_equal(np.std(img_out[..., 2]), 1)
+
+    # Test standardize (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=np.mean(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=np.mean(pil_img), std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=127, std=5)]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=[127, 127], std=5)]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (RGB)
+    transform_sequence = [ToPILImage('RGB'), Standardize(std=[5, 5, 5, 5])]
+    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (L)
     transform_sequence = [ToPILImage('L'), Standardize()]
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     nose.tools.assert_almost_equal(np.std(img_out), 1)
 
-    # Test for wrong use
+    # Test standardize (L)
+    transform_sequence = [ToPILImage('L'), Standardize(mean=np.mean(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (L)
+    transform_sequence = [ToPILImage('L'), Standardize(mean=np.mean(pil_img), std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (L)
+    transform_sequence = [ToPILImage('L'), Standardize(std=np.std(pil_img))]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (L)
+    transform_sequence = [ToPILImage('L'), Standardize(mean=127, std=5)]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (L) - check whether the mean centering works
+    transform_sequence = [ToPILImage('L'), Standardize(std=0)]
+    p = ImageProcessor(transform_sequence)
+    img_out = np.array(p.apply_transforms(test_input))
+    nose.tools.assert_almost_equal(np.mean(img_out), 0)
+
+    # Test standardize (L) - check whether the std division works
+    transform_sequence = [ToPILImage('L'), Standardize(mean=0)]
+    p = ImageProcessor(transform_sequence)
+    img_out = np.array(p.apply_transforms(test_input))
+    nose.tools.assert_almost_equal(np.std(img_out), 1)
+
+    # Test standardize error (L)
+    transform_sequence = [ToPILImage('L'), Standardize(mean=[127, 127], std=5)]
+    with nose.tools.assert_raises(AssertionError):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize error (L)
+    transform_sequence = [ToPILImage('L'), Standardize(std=[5, 5, 5, 5])]
+    with nose.tools.assert_raises(AssertionError):
+        ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test for wrong use (L)
     transform_sequence = [ToPILImage('L'), Standardize(), Resize(size=(200, 200))]
     p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
         p.apply_transforms(test_input)
 
-    # Test for wrong use
+    # Test for wrong use (RGBA)
     transform_sequence = [ToPILImage('RGBA'), Standardize(), Standardize()]
     p = ImageProcessor(transform_sequence)
     with nose.tools.assert_raises(Exception):
