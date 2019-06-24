@@ -108,5 +108,5 @@ test_image_utils/
 .idea/
 
 # other
-maxfw/.DS_Store
-.vscode/settings.json
+*.DS_Store
+.vscode/
