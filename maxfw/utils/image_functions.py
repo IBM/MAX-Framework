@@ -145,7 +145,7 @@ def standardize(img, mean=None, std=None):
         else:
             # if the mean is not a number or a sequence
             raise TypeError('`Mean` should either be a number or an n-dimensional vector of numbers '
-                             'with n equal to the number of image channels.')
+                            'with n equal to the number of image channels.')
 
         if std is None:
             # calculate channel-wise std
@@ -163,7 +163,7 @@ def standardize(img, mean=None, std=None):
         else:
             # if the std is not a number or a sequence
             raise TypeError('`std` should either be a number or an n-dimensional vector '
-                             'of numbers with n equal to the number of image channels.')
+                            'of numbers with n equal to the number of image channels.')
 
         # return the standardized array
         # a. mean center
