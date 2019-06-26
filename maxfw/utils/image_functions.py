@@ -144,7 +144,7 @@ def standardize(img, mean=None, std=None):
             mean = np.array(mean).reshape((1, 1, channels))
         else:
             # if the mean is not a number or a sequence
-            raise ValueError('The value for `mean` should either be a number or an n-dimensional vector of numbers '
+            raise TypeError('`Mean` should either be a number or an n-dimensional vector of numbers '
                              'with n equal to the number of image channels.')
 
         if std is None:
@@ -162,7 +162,7 @@ def standardize(img, mean=None, std=None):
             std = np.array(std).reshape((channels,))
         else:
             # if the std is not a number or a sequence
-            raise ValueError('The value for `std` should either be a number or an n-dimensional vector '
+            raise TypeError('`std` should either be a number or an n-dimensional vector '
                              'of numbers with n equal to the number of image channels.')
 
         # return the standardized array
