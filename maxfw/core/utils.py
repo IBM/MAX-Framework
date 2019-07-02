@@ -15,13 +15,14 @@ def redirect_errors_to_flask(func):
             # run the function
             return func(*args, **kwargs)
         except ValueError as ve:
-            if 'specific_message' in str(ve):
-                raise NotImplementedError
+            if 'channel' in str(ve):
+                abort(400, "Invalid input, please ensure the input has right number of channels.")
+            elif 'mode' in str(ve):
+                abort(400, "Invalid input, please ensure the right mode is used with the given channels.")
             else:
-                raise NotImplementedError
+                abort(400, str(ve))
         except TypeError as te:
-            raise te
-            # TODO
+            abort(400, "Invalid input." + str(te))
         except Exception as e:
             # on error, return a 400 using the `abort` module in flask
             if len(str(e)) > 0:
@@ -29,7 +30,7 @@ def redirect_errors_to_flask(func):
                 abort(400, str(e))
             else:
                 # otherwise, return a generic message
-                abort(400, "Something went wrong in the image processing pipeline. Please verify your image.")
+                abort(400, "Undocumented input error, please verify inputs.")
 
     return inner
 
