@@ -130,10 +130,23 @@ def test_imageprocessor_standardize():
     p = ImageProcessor(transform_sequence)
     img_out = p.apply_transforms(test_input)
     nose.tools.assert_almost_equal(np.std(img_out[..., :3]), 1)
-    nose.tools.assert_equal(np.std(img_out[..., 3]), 0)
+    nose.tools.assert_equal(np.mean(img_out[..., 3]), 0)
 
     # generate an image array
     pil_img = ImageProcessor([ToPILImage('RGBA'), PILtoarray()]).apply_transforms(test_input)
+
+    # Test standardize (RGBA) with 4 channel-wise values
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=[x for x in np.mean(pil_img, axis=(0, 1))],
+                                                          std=[x for x in np.std(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGBA) with 4 channel-wise values for the mean
+    transform_sequence = [ToPILImage('RGBA'), Standardize(mean=[x for x in np.mean(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGBA) with 4 channel-wise values for the std
+    transform_sequence = [ToPILImage('RGBA'), Standardize(std=[x for x in np.std(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize (RGBA)
     transform_sequence = [ToPILImage('RGBA'), Standardize(mean=np.mean(pil_img))]
@@ -181,6 +194,7 @@ def test_imageprocessor_standardize():
     p = ImageProcessor(transform_sequence)
     img_out = np.array(p.apply_transforms(test_input))
     nose.tools.assert_almost_equal(np.std(img_out), 1)
+    nose.tools.assert_almost_equal(np.mean(img_out), 0)
 
     # Test standardize (RGB) - check whether the mean centering works
     transform_sequence = [ToPILImage('RGB'), Standardize(std=0)]
@@ -195,6 +209,22 @@ def test_imageprocessor_standardize():
     nose.tools.assert_almost_equal(np.std(img_out[..., 0]), 1)
     nose.tools.assert_almost_equal(np.std(img_out[..., 1]), 1)
     nose.tools.assert_almost_equal(np.std(img_out[..., 2]), 1)
+
+    # generate an image array
+    pil_img = ImageProcessor([ToPILImage('RGB'), PILtoarray()]).apply_transforms(test_input)
+
+    # Test standardize (RGB) with 3 channel-wise values
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=[x for x in np.mean(pil_img, axis=(0, 1))],
+                                                         std=[x for x in np.std(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB) with 3 channel-wise values for the mean
+    transform_sequence = [ToPILImage('RGB'), Standardize(mean=[x for x in np.mean(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
+
+    # Test standardize (RGB) with 3 channel-wise values for the std
+    transform_sequence = [ToPILImage('RGB'), Standardize(std=[x for x in np.std(pil_img, axis=(0, 1))])]
+    ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize (RGB)
     transform_sequence = [ToPILImage('RGB'), Standardize(mean=np.mean(pil_img))]
