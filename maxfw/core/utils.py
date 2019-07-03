@@ -15,23 +15,12 @@ def redirect_errors_to_flask(func):
             # run the function
             return func(*args, **kwargs)
         except ValueError as ve:
-            if 'channel' in str(ve):
-                abort(400, "Invalid input, please ensure the input has right number of channels.")
-            elif 'mode' in str(ve):
-                abort(400, "Invalid input, please ensure the right mode is used with the given channels.")
-            else:
-                abort(400, str(ve))
+            if 'pic should be 2 or 3 dimensional' in str(ve):
+                abort(400, "Invalid input dimensions, please ensure the input is a grayscale,", 
+                    "RGB or RGBA image or a corresponding numpy array of 2 or 3 dimensions.")
         except TypeError as te:
-            abort(400, "Invalid input." + str(te))
-        except Exception as e:
-            # on error, return a 400 using the `abort` module in flask
-            if len(str(e)) > 0:
-                # if there is a specific error message, return it
-                abort(400, str(e))
-            else:
-                # otherwise, return a generic message
-                abort(400, "Undocumented input error, please verify inputs.")
-
+            if 'bytes or ndarray' in str(te):
+                abort(400, "Invalid input format, please make sure the input is an image or numpy array")
     return inner
 
 

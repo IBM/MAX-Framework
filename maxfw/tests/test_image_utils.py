@@ -407,23 +407,18 @@ def test_imageprocessor_combinations():
 
 
 def test_flask_error():
-    # Test for flask exception by using the wrong channel format
-    transform_sequence = [ToPILImage('XXX')]
-    p = MAXImageProcessor(transform_sequence)
-    with nose.tools.assert_raises_regexp(Exception, r"^400 Bad Request: *"):
-        p.apply_transforms(test_input)
 
-    # Test for a specific error message
+    # Test invalid input format
     transform_sequence = [ToPILImage('RGB')]
     p = MAXImageProcessor(transform_sequence)
-    with nose.tools.assert_raises_regexp(Exception, r"pic should be bytes or ndarray.*"):
+    with nose.tools.assert_raises_regexp(Exception, r".*Invalid input format*"):
         p.apply_transforms("")
-
-    # Test for a flask exception by misusing normalize and standardize functionality
-    transform_sequence = [ToPILImage('RGB'), Normalize(), Standardize()]
+    
+    # Test invalid input dimensions
+    transform_sequence = [ToPILImage('RGB')]
     p = MAXImageProcessor(transform_sequence)
-    with nose.tools.assert_raises_regexp(Exception, r"400 Bad Request: *"):
-        p.apply_transforms(test_input)
+    with nose.tools.assert_raises_regexp(Exception, r".*Invalid input dimensions*"):
+        p.apply_transforms(np.random.rand(10, 10, 10, 10))
 
 
 if __name__ == '__main__':

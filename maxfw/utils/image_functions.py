@@ -41,7 +41,7 @@ def to_pil_image(pic, target_mode, mode=None):
 
     elif isinstance(pic, np.ndarray):
         if pic.ndim not in {2, 3}:
-            raise ValueError('pic should be 2/3 dimensional. Got {} dimensions.'.format(pic.ndim))
+            raise ValueError('pic should be 2 or 3 dimensional. Got {} dimensions.'.format(pic.ndim))
 
         elif pic.ndim == 2:
             # if 2D image, add channel dimension (HWC)
