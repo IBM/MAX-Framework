@@ -413,7 +413,7 @@ def test_flask_error():
     p = MAXImageProcessor(transform_sequence)
     with nose.tools.assert_raises_regexp(Exception, r".*Invalid input format*"):
         p.apply_transforms("")
-    
+
     # Test invalid input dimensions
     transform_sequence = [ToPILImage('RGB')]
     p = MAXImageProcessor(transform_sequence)
