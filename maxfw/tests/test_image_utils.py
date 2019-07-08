@@ -432,7 +432,7 @@ def test_flask_error():
     # Test invalid input dimensions
     transform_sequence = [ToPILImage('RGB')]
     p = MAXImageProcessor(transform_sequence)
-    with nose.tools.assert_raises_regexp(Exception, r".*Invalid input dimensions*"):
+    with nose.tools.assert_raises_regexp(Exception, r".*grayscale or a colour image*"):
         p.apply_transforms(np.random.rand(10, 10, 10, 10))
 
 

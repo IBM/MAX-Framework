@@ -31,11 +31,12 @@ def redirect_errors_to_flask(func):
             return func(*args, **kwargs)
         except ValueError as ve:
             if 'pic should be 2 or 3 dimensional' in str(ve):
-                abort(400, "Invalid input dimensions, please ensure the input is a grayscale,",
-                      "RGB or RGBA image or a corresponding numpy array of 2 or 3 dimensions.")
+                abort(400, "Invalid input, please ensure the input is either "
+                      "a grayscale or a colour image.")
         except TypeError as te:
             if 'bytes or ndarray' in str(te):
-                abort(400, "Invalid input format, please make sure the input is an image or numpy array")
+                abort(400, "Invalid input format, please make sure the input file format "
+                      " is a common image format such as JPG or PNG.")
     return inner
 
 
