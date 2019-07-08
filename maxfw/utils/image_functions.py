@@ -143,6 +143,9 @@ def standardize(img, mean=None, std=None):
         # (this image has channels)
         # calculate the number of channels
         channels = img.shape[-1]
+        assert channels < 4, 'An image with more than 3 channels, ' \
+                             'e.g. `RGBA`, must be converted to an image with 3 or fewer channels (e.g. `RGB` or `L`)' \
+                             'before it can be standardized correctly.'
 
         if mean is None:
             # calculate channel-wise mean
