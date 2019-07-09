@@ -13,21 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from abc import abstractmethod
+
+from abc import ABC, abstractmethod
 
 
-class MAXModelWrapper(object):
-    @abstractmethod
+class MAXModelWrapper(ABC):
     def __init__(self, path=None):
         """Implement code to load model here"""
         pass
 
-    @abstractmethod
     def _pre_process(self, x):
         """Implement code to process raw input into format required for model inference here"""
         return x
 
-    @abstractmethod
     def _post_process(self, x):
         """Implement any code to post-process model inference response here"""
         return x
@@ -35,7 +33,7 @@ class MAXModelWrapper(object):
     @abstractmethod
     def _predict(self, x):
         """Implement core model inference code here"""
-        return x
+        pass
 
     def predict(self, x):
         pre_x = self._pre_process(x)
