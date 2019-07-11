@@ -13,7 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# API metadata
-API_TITLE = 'Model Asset Exchange Microservice'
-API_DESC = 'An API for serving models'
-API_VERSION = '0.1'

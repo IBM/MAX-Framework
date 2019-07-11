@@ -15,7 +15,7 @@ install:
 before_script:
   - flake8 . --max-line-length=127
 script:
-  - true  # add other tests here
+  - python setup.py test  # add other tests here
 notifications:
   on_success: change
   on_failure: change  # `always` will be the setting once code changes slow down

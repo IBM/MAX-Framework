@@ -103,4 +103,10 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# local test files
+test_image_utils/
 .idea/
+
+# other
+*.DS_Store
+.vscode/
