@@ -60,7 +60,7 @@ class ImageProcessor(object):
         # verify whether the Normalize or Standardize transformations are positioned at the end
         encoding = [(isinstance(t, Normalize) or isinstance(t, Standardize)) for t in self.transforms]
         if sum(encoding[:-1]) != 0:
-            raise ValueError('A Standardize or Normalize transformation must be positioned at the end of the pipeline.')
+            raise ValueError('A Standardize or Normalize transformation can only be positioned at the end of the pipeline.')
 
         # apply the transformations
         for t in self.transforms:
