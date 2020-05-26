@@ -33,6 +33,7 @@ setup(name='maxfw',
         'flask-restplus==0.11.0',
         'flask-cors',
         'Pillow',
+        'numpy',
         ],
       test_suite='nose.collector',
       tests_require=['nose']

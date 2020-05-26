@@ -146,8 +146,8 @@ def standardize(img, mean=None, std=None):
         # calculate the number of channels
         channels = img.shape[-1]
         if channels >= 4:
-            raise ValueError('An image with more than 3 channels, ' \
-                             'e.g. `RGBA`, must be converted to an image with 3 or fewer channels (e.g. `RGB` or `L`)' \
+            raise ValueError('An image with more than 3 channels,'
+                             'e.g. `RGBA`, must be converted to an image with 3 or fewer channels (e.g. `RGB` or `L`)'
                              'before it can be standardized correctly.')
 
         if mean is None:
@@ -232,7 +232,7 @@ def resize(img, size, interpolation=Image.BILINEAR):
         img (PIL Image): Image to be resized.
         size (sequence or int): Desired output size. If size is a sequence like
             (h, w), the output size will be matched to this. If size is an int,
-            the smaller edge of the image will be matched to this number maintaing
+            the smaller edge of the image will be matched to this number maintaining
             the aspect ratio. i.e, if height > width, then image will be rescaled to
             :math:`\left(\text{size} \times \frac{\text{height}}{\text{width}}, \text{size}\right)`
         interpolation (int, optional): Desired interpolation. Default is
@@ -320,7 +320,7 @@ def hflip(img):
         img (PIL Image): Image to be flipped.
 
     Returns:
-        PIL Image:  Horizontall flipped image.
+        PIL Image: Horizontally flipped image.
     """
     if not _is_pil_image(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
