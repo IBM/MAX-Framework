@@ -15,7 +15,7 @@
 #
 import os
 from flask import Flask
-from flask_restplus import Api, Namespace
+from flask_restx import Api, Namespace
 from flask_cors import CORS
 from .default_config import API_TITLE, API_DESC, API_VERSION
 
