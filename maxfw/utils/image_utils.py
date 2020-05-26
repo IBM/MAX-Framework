@@ -43,7 +43,7 @@ class ImageProcessor(object):
     """
 
     def __init__(self, transforms=[]):
-        assert isinstance(transforms, Sequence)
+        assert isinstance(transforms, Sequence)  # nosec - assert
         self.transforms = transforms
 
     def apply_transforms(self, img):
@@ -59,8 +59,8 @@ class ImageProcessor(object):
         """
         # verify whether the Normalize or Standardize transformations are positioned at the end
         encoding = [(isinstance(t, Normalize) or isinstance(t, Standardize)) for t in self.transforms]
-        assert sum(encoding[:-1]) == 0, \
-            'A Standardize or Normalize transformation must be positioned at the end of the pipeline.'
+        if sum(encoding[:-1]) != 0:
+            raise ValueError('A Standardize or Normalize transformation must be positioned at the end of the pipeline.')
 
         # apply the transformations
         for t in self.transforms:
@@ -175,7 +175,7 @@ class Resize(object):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        assert isinstance(size, int) or (isinstance(size, Sequence) and len(size) == 2)
+        assert isinstance(size, int) or (isinstance(size, Sequence) and len(size) == 2)  # nosec - assert
         self.size = size
         self.interpolation = interpolation
 

@@ -54,5 +54,5 @@ class MAXApp(object):
         def index():
             return self.app.send_static_file('index.html')
 
-    def run(self, host='0.0.0.0'):
+    def run(self, host='0.0.0.0'):  # nosec - binding to all interfaces
         self.app.run(host)
