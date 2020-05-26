@@ -4,7 +4,7 @@
  Python package that contains common code shared across all MAX models.
 
 ## Dependencies
-* [flask-restplus](https://pypi.org/project/flask-restplus/0.11.0/)
+* [flask-restx](https://pypi.org/project/flask-restx/0.1.1/)
 * [flask-cors](https://pypi.org/project/Flask-Cors/)
 
 ## Installation

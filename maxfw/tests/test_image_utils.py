@@ -143,7 +143,7 @@ def test_imageprocessor_standardize():
     # Test standardize (RGBA)
     # The `A` channel cannot be standardized, and will therefore prompt an error message when attempted.
     transform_sequence = [ToPILImage('RGBA'), Standardize()]
-    with nose.tools.assert_raises_regexp(AssertionError, r".*must be converted to an image with 3 or fewer channels.*"):
+    with nose.tools.assert_raises_regexp(ValueError, r".*must be converted to an image with 3 or fewer channels.*"):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize (RGB)
@@ -201,12 +201,12 @@ def test_imageprocessor_standardize():
 
     # Test standardize error (RGB)
     transform_sequence = [ToPILImage('RGB'), Standardize(mean=[127, 127], std=5)]
-    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+    with nose.tools.assert_raises_regexp(ValueError, r".*must correspond to the number of channels.*"):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize error (RGB)
     transform_sequence = [ToPILImage('RGB'), Standardize(std=[5, 5, 5, 5])]
-    with nose.tools.assert_raises_regexp(AssertionError, r".*must correspond to the number of channels.*"):
+    with nose.tools.assert_raises_regexp(ValueError, r".*must correspond to the number of channels.*"):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize (L)
@@ -245,12 +245,12 @@ def test_imageprocessor_standardize():
 
     # Test standardize error (L)
     transform_sequence = [ToPILImage('L'), Standardize(mean=[127, 127], std=5)]
-    with nose.tools.assert_raises(AssertionError):
+    with nose.tools.assert_raises(ValueError):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize error (L)
     transform_sequence = [ToPILImage('L'), Standardize(std=[5, 5, 5, 5])]
-    with nose.tools.assert_raises(AssertionError):
+    with nose.tools.assert_raises(ValueError):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test for wrong use (L)
