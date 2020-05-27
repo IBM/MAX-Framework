@@ -158,7 +158,7 @@ def standardize(img, mean=None, std=None):
             mean = np.array([mean] * channels).reshape((1, 1, channels))
         elif isinstance(mean, Sequence):
             # convert a sequence to the right dimensions
-            if np.issubdtype(mean.dtype, np.number):
+            if any(not isinstance(x, (int, float)) for x in mean):
                 raise ValueError('The sequence `mean` can only contain numbers.')
             if len(mean) != channels:
                 raise ValueError('The size of the `mean` array must correspond to the number of channels in the image.')
@@ -176,7 +176,7 @@ def standardize(img, mean=None, std=None):
             std = np.array([std] * channels).reshape((channels,))
         elif isinstance(std, Sequence):
             # convert a sequence to the right dimensions
-            if np.issubdtype(mean.dtype, np.number):
+            if any(not isinstance(x, (int, float)) for x in mean):
                 raise ValueError('The sequence `std` can only contain numbers.')
             if len(std) != channels:
                 raise ValueError('The size of the `std` array must correspond to the number of channels in the image.')
