@@ -62,6 +62,8 @@ class ImageProcessor(object):
         if sum(encoding[:-1]) != 0:
             raise ValueError('A Standardize or Normalize transformation can only be positioned at the end of the'
                              'pipeline.')
+        if encoding[-1] == 0:
+            raise ValueError('A Standardize or Normalize transformation must be positioned at the end of the pipeline.')
 
         # apply the transformations
         for t in self.transforms:
@@ -104,7 +106,7 @@ class ToPILImage(object):
 
 class PILtoarray(object):
     """
-    onvert a PIL Image object to a numpy ndarray.
+    Convert a PIL Image object to a numpy ndarray.
     """
 
     def __call__(self, pic):
@@ -114,7 +116,6 @@ class PILtoarray(object):
 
         Returns:
             numpy ndarray
-
         """
         return F.pil_to_array(pic)
 
