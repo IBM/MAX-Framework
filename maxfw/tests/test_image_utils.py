@@ -143,7 +143,7 @@ def test_imageprocessor_standardize():
     # Test standardize (RGBA)
     # The `A` channel cannot be standardized, and will therefore prompt an error message when attempted.
     transform_sequence = [ToPILImage('RGBA'), Standardize()]
-    with nose.tools.assert_raises_regexp(ValueError, r".*must be converted to an image with 3 or fewer channels.*"):
+    with nose.tools.assert_raises_regexp(ValueError, r".*must be converted to an image with 3 or fewer channels*"):
         ImageProcessor(transform_sequence).apply_transforms(test_input)
 
     # Test standardize (RGB)
