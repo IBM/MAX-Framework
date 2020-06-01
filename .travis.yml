@@ -11,9 +11,10 @@ matrix:
       dist: xenial    # required for Python >= 3.7 (travis-ci/travis-ci#9069)
 install:
   # - pip install -r requirements.txt
-  - pip install flake8
+  - pip install -r requirements-test.txt
 before_script:
   - flake8 . --max-line-length=127
+  - bandit -r .
 script:
   - python setup.py test  # add other tests here
 notifications:

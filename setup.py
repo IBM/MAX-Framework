@@ -30,9 +30,10 @@ setup(name='maxfw',
       packages=['maxfw', 'maxfw.core', 'maxfw.model', 'maxfw.utils'],
       zip_safe=True,
       install_requires=[
-        'flask-restplus==0.11.0',
-        'flask-cors',
-        'Pillow',
+        'flask-restx==0.1.1',
+        'flask-cors==3.0.7',
+        'Pillow==7.0.0',
+        'numpy==1.18.4',
         ],
       test_suite='nose.collector',
       tests_require=['nose']

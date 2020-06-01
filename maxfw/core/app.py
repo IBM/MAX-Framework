@@ -15,7 +15,7 @@
 #
 import os
 from flask import Flask
-from flask_restplus import Api, Namespace
+from flask_restx import Api, Namespace
 from flask_cors import CORS
 from .default_config import API_TITLE, API_DESC, API_VERSION
 
@@ -54,5 +54,5 @@ class MAXApp(object):
         def index():
             return self.app.send_static_file('index.html')
 
-    def run(self, host='0.0.0.0'):
+    def run(self, host='0.0.0.0'):  # nosec - binding to all interfaces
         self.app.run(host)

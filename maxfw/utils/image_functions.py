@@ -116,13 +116,15 @@ def to_pil_image(pic, target_mode, mode=None):
         raise TypeError('Input type {} is not supported'.format(npimg.dtype))
 
     # Verify that the target mode exists
-    assert target_mode in [1, 'L', 'P', 'RGB', 'RGBA', 'CMYK', 'YCbCr', 'LAB', 'HSV', 'I', 'F', 'RGBX', 'RGBBa']
+    if target_mode not in [1, 'L', 'P', 'RGB', 'RGBA', 'CMYK', 'YCbCr', 'LAB', 'HSV', 'I', 'F', 'RGBX', 'RGBBa']:
+        raise ValueError("invalid target_mode: %r" % target_mode)
 
     return Image.fromarray(npimg, mode=mode).convert(target_mode)
 
 
 def pil_to_array(pic):
-    assert _is_pil_image(pic), 'The input image for `PILtoarray` is not a PIL Image object.'
+    if not _is_pil_image(pic):
+        raise TypeError('The input image for `PILtoarray` is not a PIL Image object.')
     return np.array(pic)
 
 
@@ -143,9 +145,10 @@ def standardize(img, mean=None, std=None):
         # (this image has channels)
         # calculate the number of channels
         channels = img.shape[-1]
-        assert channels < 4, 'An image with more than 3 channels, ' \
-                             'e.g. `RGBA`, must be converted to an image with 3 or fewer channels (e.g. `RGB` or `L`)' \
-                             'before it can be standardized correctly.'
+        if channels >= 4:
+            raise ValueError('An image with more than 3 channels,'
+                             'e.g. `RGBA`, must be converted to an image with 3 or fewer channels (e.g. `RGB` or `L`)'
+                             'before it can be standardized correctly.')
 
         if mean is None:
             # calculate channel-wise mean
@@ -155,10 +158,10 @@ def standardize(img, mean=None, std=None):
             mean = np.array([mean] * channels).reshape((1, 1, channels))
         elif isinstance(mean, Sequence):
             # convert a sequence to the right dimensions
-            assert np.sum([not isinstance(x, (int, float)) for x in mean]) == 0, \
-                'The sequence `mean` can only contain numbers.'
-            assert len(mean) == channels, \
-                'The size of the `mean` array must correspond to the number of channels in the image.'
+            if any(not isinstance(x, (int, float)) for x in mean):
+                raise ValueError('The sequence `mean` can only contain numbers.')
+            if len(mean) != channels:
+                raise ValueError('The size of the `mean` array must correspond to the number of channels in the image.')
             mean = np.array(mean).reshape((1, 1, channels))
         else:
             # if the mean is not a number or a sequence
@@ -173,10 +176,10 @@ def standardize(img, mean=None, std=None):
             std = np.array([std] * channels).reshape((channels,))
         elif isinstance(std, Sequence):
             # convert a sequence to the right dimensions
-            assert np.sum([not isinstance(x, (int, float)) for x in std]) == 0, \
-                'The sequence `std` can only contain numbers.'
-            assert len(std) == channels, \
-                'The size of the `std` array must correspond to the number of channels in the image.'
+            if any(not isinstance(x, (int, float)) for x in std):
+                raise ValueError('The sequence `std` can only contain numbers.')
+            if len(std) != channels:
+                raise ValueError('The size of the `std` array must correspond to the number of channels in the image.')
             std = np.array(std).reshape((channels,))
         else:
             # if the std is not a number or a sequence
@@ -199,7 +202,8 @@ def standardize(img, mean=None, std=None):
         if mean is None:
             mean = np.mean(img)
         elif isinstance(mean, Sequence):
-            assert len(mean) == 1
+            if len(mean) != 1:
+                raise ValueError("len(mean) is not 1")
             mean = mean[0]
         elif not isinstance(mean, (int, float)):
             raise ValueError('The value for `mean` should be a number or `None` '
@@ -208,7 +212,8 @@ def standardize(img, mean=None, std=None):
         if std is None:
             std = np.std(img)
         elif isinstance(std, Sequence):
-            assert len(std) == 1
+            if len(std) != 1:
+                raise ValueError("len(std) is not 1")
             std = std[0]
         elif not isinstance(std, (int, float)):
             raise ValueError('The value for `std` should be a number or `None` '
@@ -227,7 +232,7 @@ def resize(img, size, interpolation=Image.BILINEAR):
         img (PIL Image): Image to be resized.
         size (sequence or int): Desired output size. If size is a sequence like
             (h, w), the output size will be matched to this. If size is an int,
-            the smaller edge of the image will be matched to this number maintaing
+            the smaller edge of the image will be matched to this number maintaining
             the aspect ratio. i.e, if height > width, then image will be rescaled to
             :math:`\left(\text{size} \times \frac{\text{height}}{\text{width}}, \text{size}\right)`
         interpolation (int, optional): Desired interpolation. Default is
@@ -301,7 +306,8 @@ def resized_crop(img, i, j, h, w, size, interpolation=Image.BILINEAR):
     Returns:
         PIL Image: Cropped image.
     """
-    assert _is_pil_image(img), 'img should be PIL Image'
+    if not _is_pil_image(img):
+        raise TypeError('img should be PIL Image')
     img = crop(img, i, j, h, w)
     img = resize(img, size, interpolation)
     return img
@@ -314,7 +320,7 @@ def hflip(img):
         img (PIL Image): Image to be flipped.
 
     Returns:
-        PIL Image:  Horizontall flipped image.
+        PIL Image: Horizontally flipped image.
     """
     if not _is_pil_image(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
@@ -501,7 +507,8 @@ def rotate(img, angle, resample=False, expand=False, center=None):
     .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters
 
     """
-    assert isinstance(angle, (int, float)), "The angle must be either a float or int."
+    if not isinstance(angle, (int, float)):
+        raise ValueError("The angle must be either a float or int.")
 
     if not _is_pil_image(img):
         raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
@@ -514,6 +521,7 @@ def to_grayscale(img, num_output_channels=1):
 
     Args:
         img (PIL Image): Image to be converted to grayscale.
+        num_output_channels (Int): Number of output channels.
 
     Returns:
         PIL Image: Grayscale version of the image.

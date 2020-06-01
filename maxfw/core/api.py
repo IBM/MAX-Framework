@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 from .app import MAX_API
-from flask_restplus import Resource, fields
+from flask_restx import Resource, fields
 
 METADATA_SCHEMA = MAX_API.model('ModelMetadata', {
         'id': fields.String(required=True, description='Model identifier'),
