@@ -32,7 +32,7 @@ setup(name='maxfw',
       install_requires=[
         'flask-restx==0.1.1',
         'flask-cors==3.0.7',
-        'Pillow==7.0.0',
+        'Pillow==8.1.1',
         'numpy==1.18.4',
         ],
       test_suite='nose.collector',
