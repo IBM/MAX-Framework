@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2019 IBM Corp. All Rights Reserved.
+# Copyright 2018-2021 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ with open('README.md') as f:
     long_description = f.read()
 
 setup(name='maxfw',
-      version='1.1.3',
+      version='1.1.4',
       description='A package to simplify the creation of MAX models',
       long_description=long_description,
       long_description_content_type='text/markdown',
