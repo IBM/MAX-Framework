@@ -30,7 +30,7 @@ setup(name='maxfw',
       packages=['maxfw', 'maxfw.core', 'maxfw.model', 'maxfw.utils'],
       zip_safe=True,
       install_requires=[
-        'flask-restx==0.1.1',
+        'flask-restx==0.3',
         'flask-cors==3.0.7',
         'Pillow==8.1.1',
         'numpy==1.18.4',
