@@ -31,7 +31,7 @@ setup(name='maxfw',
       zip_safe=True,
       install_requires=[
         'flask-restx==0.3',
-        'flask-cors==3.0.7',
+        'flask-cors==3.0.9',
         'Pillow==8.1.1',
         'numpy==1.18.4',
         ],
